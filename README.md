@@ -16,7 +16,10 @@
 | **Database** | PostgreSQL | JSON 타입 컬럼 활용 가능 |
 | **Storage** | Local `/uploads/` | 초기엔 로컬로만 이미지/파일 관리 |
 ---
+## 🗂️ ERD
+![ERD](/docs/erd_kkulog_v1.png.png)
 
+---
 ## 📁 기본 구조 (예정)
 ```
 kkulog/
@@ -30,3 +33,19 @@ kkulog/
 │ └── package.json
 └── README.md
 ```
+---
+## 📘 주요 테이블 구상
+
+| 테이블 | 역할 | 주요 컬럼 | 비고 |
+|--------|------|-----------|------|
+| **User** | 사용자 정보 | `id`, `email`, `nickname`, `theme`, `source(google/local)` | 구글 연동 / 로컬 사용자 |
+| **Diary** | 다이어리 기본 정보 | `id`, `userId`, `title`, `createdAt`, `metadata(JSON)` | 사용자별 여러 개 보유 가능 |
+| **Style** | 다이어리 스타일 설정 | `id`, `diaryId`, `year`, `month`, `day (nullable)`, `metadata(JSON)` | 월 단위 기본, 일 단위 확장 가능 |
+| **Sticker** | 스티커 정보 | `id`, `diaryId`, `type`, `x`, `y`, `size`, `rotation`, `metadata(JSON)` | 다이어리 위 자유 배치 |
+| **Schedule** | 일정 정보 | `id`, `diaryId`, `title`, `startDate`, `endDate`, `emotion`, `metadata(JSON)` | 일정 작성 / 구글 연동 가능 |
+| **TextBlock** | 텍스트 블록 | `id`, `diaryId`, `x`, `y`, `content`, `metadata(JSON)` | 다이어리 내 자유 배치 |
+| **Tag** | 일정 분류 | `id`, `name`, `color` | 필터링용 |
+| **ScheduleTag** | 일정–태그 연결 | `id`, `scheduleId`, `tagId` | N:M 관계 |
+
+---
+
