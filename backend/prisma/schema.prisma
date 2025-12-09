@@ -1,16 +1,15 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql"  // postgresql, mysql, sqlite, mongodb 등 선택 가능
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
   password  String
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 }

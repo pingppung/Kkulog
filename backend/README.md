@@ -61,3 +61,14 @@ npm run dev
 | **PostgreSQL** | 17 (로컬 설치) |
 | **Prisma** | 6.19.0 |
 | **Express** | 5.1.0 |
+
+## 🐞 Issues & Notes (개발 중 발생한 문제 정리)
+#### 1) Prisma Client 로딩 오류
+
+Node 22.16.x 환경에서 Prisma 6.x 사용 시 서버 실행이 되지 않는 문제가 있었음  
+PrismaClient를 불러오지 못하는 오류가 반복 발생함 
+
+👉 Node 버전을 22.11.0으로 낮춘 뒤 정상적으로 동작  
+👉 Prisma는 6.x 유지
+
+[Issue #1 – Prisma Client 실행 오류 정리](https://github.com/pingppung/Kkulog/issues/1)
