@@ -1,75 +1,159 @@
 @import "tailwindcss";
+/* @import "./styles/theme.css"; */
+@import "./features/theme/theme.css";
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* 1. 폰트 설정 (기존 내용 그대로) */
+@font-face {
+  font-family: "SiganpyoR";
+  src: url("/fonts/Hakgyoansim_SiganpyoR.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+@font-face {
+  font-family: "JayusiganR";
+  src: url("/fonts/Hakgyoansim_JayusiganR.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+/* 2. 기본 베이스 설정 */
+@layer base {
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    background: transparent;
   }
 }
 
-div#root {
-  width: 100%;
-  height: 100%;
+/* 3. 컴포넌트 & 달력 로직 (핵심 정리 구간) */
+@layer components {
+
+  /* 날짜 셀 스타일 */
+  .day-cell {
+    @apply h-full p-1 flex flex-col ring-1 ring-white/5;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  }
+
+
+  .day-cell--weekday-current {
+    background-color: var(--cell-current-bg);
+    color: var(--cell-text-main);
+  }
+
+  .day-cell--sat-current,
+  .day-cell--sun-current {
+    background-color: var(--cell-weekend-bg);
+    color: var(--cell-text-main);
+  }
+
+  .day-cell--weekday-other,
+  .day-cell--sat-other,
+  .day-cell--sun-other {
+    background-color: var(--cell-other-bg);
+    color: var(--cell-text-muted);
+  }
+
+  .day-cell--today {
+    background-color: var(--cell-today-bg);
+    color: white;
+  }
+
+  /* 버튼들 */
+  .nav-btn {
+    @apply w-6 h-6 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 rounded transition;
+  }
+
+  .add-btn {
+    @apply w-7 h-7 flex items-center justify-center text-white bg-blue-500/80 hover:bg-blue-500 rounded-md shadow-sm transition;
+  }
+
+  /* 🎯 부모 그리드: 높이 낮아질 때 간격 조절 */
+  .calendar-event-grid {
+    display: grid !important;
+    grid-template-rows: repeat(auto-fill, 12px) !important;
+    row-gap: 2px !important;
+    overflow: hidden;
+
+    @media (max-height: 500px) {
+      grid-template-rows: repeat(auto-fill, 6px) !important;
+      row-gap: 1px !important;
+    }
+
+
+  }
+
+  /* 🎯 일정 바: 높이 낮아질 때 선으로 변신 */
+  .event-bar-inner {
+    @apply absolute inset-x-1 inset-y-0 rounded text-xs text-white flex items-center px-1 overflow-hidden transition-all duration-200;
+
+    @media (max-height: 500px) {
+      top: 50% !important;
+      bottom: auto !important;
+      height: 3px !important;
+      transform: translateY(-50%) !important;
+      padding: 0 !important;
+      border-radius: 999px !important;
+      left: 2px !important;
+      right: 2px !important;
+
+      & span {
+        display: none !important;
+      }
+    }
+  }
+
+  .rdp-root.date-picker {
+    --rdp-day_button-height: 25px !important;
+    --rdp-day_button-width: 25px !important;
+    --rdp-nav-height: 1.75rem !important;
+    --rdp-accent-background-color: #a8a8ff !important;
+    --rdp-nav_button-height: 1.25rem;
+    --rdp-nav_button-width: 1.25rem;
+    /* --rdp-today-color: var(--cell-text-muted) !important; */
+    --rdp-accent-color: var(--cell-weekend-bg) !important;
+  }
+
+  .date-picker .rdp-selected .rdp-day_button {
+    border: var(--selected-border) !important;
+  }
+  .date-picker .rdp-chevron {
+    fill: var(--accent-color)!important;
+  }
+
+  .date-picker .rdp-month_caption {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* 4. 유틸리티 (드래그 및 폰트 크기) */
+@layer utilities {
+  .drag {
+    -webkit-app-region: drag;
+  }
+
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+
+  .font-SiganpyoR {
+    font-family: 'SiganpyoR', sans-serif;
+    font-size: clamp(12px, 1.6vw, 15px);
+    line-height: normal;
+    letter-spacing: -0.6px;
+  }
+
+  .font-JayusiganR {
+    font-family: 'JayusiganR', sans-serif;
+    font-size: clamp(13px, 1.6vw, 15px);
+    line-height: normal;
+    letter-spacing: -0.6px;
+  }
 }

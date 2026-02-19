@@ -61,3 +61,22 @@ npm run dev
 | **PostgreSQL** | 17 (로컬 설치) |
 | **Prisma** | 6.19.0 |
 | **Express** | 5.1.0 |
+
+
+
+
+
+스키마 수정할 때
+npx prisma db push
+
+테스트 데이터 필요할 때
+npx prisma db seed
+
+스키마가 “이제 거의 확정”됐을 때
+npx prisma migrate dev --name init
+
+데이터 수정/추가 → Prisma Studio
+
+스키마 변경 → migrate / db push
+
+DB 초기화 → seed
