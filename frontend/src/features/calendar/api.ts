@@ -34,7 +34,6 @@ export async function fetchEvents(
       end: end.toISOString(),
     },
   });
-
   return res.data.map((ev: any) => ({
     ...ev,
     start: new Date(ev.start),
@@ -65,6 +64,10 @@ export async function updateEvent(
     `/events/${event.id}`,
     event
   );
-
   return res.data;
+}
+
+// 일정 삭제
+export async function deleteEvent(id: number): Promise<void> {
+  await api.delete(`/events/${id}`);
 }

@@ -12,7 +12,7 @@ interface CalendarViewProps {
 
   eventEditor: {
     create: () => void;
-    edit: (eventId: string) => void;
+    edit: (eventId: number) => void;
   };
 }
 

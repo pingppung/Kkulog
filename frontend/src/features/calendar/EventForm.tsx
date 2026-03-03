@@ -51,17 +51,22 @@ export default function EventForm({
 
   /* ===================== handlers ===================== */
   const handleSave = async () => {
-    const finalEndDate = isRange ? endDate : startDate;
+    let finalEndDate = endDate;
+
+    if (!isRange) {
+      finalEndDate = new Date(startDate);
+      finalEndDate.setHours(23, 59, 59, 999);
+    }
 
     const newEvent = {
-      id: event?.id ?? crypto.randomUUID(),
+      ...(event ? { id: event.id } : {}),
       title,
-      description: memo,
+      memo: memo,
       color,
       start: startDate,
       end: finalEndDate,
     };
-
+    console.log(newEvent);
     await onSubmit(newEvent);
     onClose();
   };
@@ -110,6 +115,13 @@ export default function EventForm({
     setPickerTarget(null);
   };
 
+  const handleDelete = async () => {
+    if (!event) return;
+
+    const ok = window.confirm("이 일정을 삭제하시겠습니까?");
+    if (!ok) return;
+    onClose();
+  };
   /* ===================== effects ===================== */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -127,7 +139,7 @@ export default function EventForm({
   useEffect(() => {
     if (event) {
       setTitle(event.title);
-      setMemo(event.description ?? "");
+      setMemo(event.memo ?? "");
       setColor(event.color);
       setStartDate(event.start);
       setEndDate(event.end);
@@ -147,12 +159,24 @@ export default function EventForm({
         <h2 className="text-lg font-semibold text-gray-800">
           {event ? "일정 수정" : "새 일정"}
         </h2>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition"
-        >
-          ✕
-        </button>
+
+        <div className="flex items-center gap-3">
+          {event && (
+            <button
+              onClick={handleDelete}
+              className="text-red-400 hover:text-red-600 transition"
+            >
+              🗑
+            </button>
+          )}
+
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition"
+          >
+            ✕
+          </button>
+        </div>
       </header>
 
       {/* Scroll Area */}
@@ -272,11 +296,11 @@ export default function EventForm({
             disabled={!isValid}
             className={`flex-1 py-3 rounded-2xl font-semibold transition
                 ${isValid
-                  ? "bg-indigo-500 text-white shadow-md hover:bg-indigo-600"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                }
+                ? "bg-indigo-500 text-white shadow-md hover:bg-indigo-600"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }
               `}
-            >
+          >
             {event ? "수정하기" : "저장하기"}
           </button>
         </div>

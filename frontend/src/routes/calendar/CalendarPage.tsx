@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCalendar } from "../../features/calendar/useCalendar";
-import CalendarLayout from "../../layouts/CalendarLayout";
+import CalendarLayout from "../../layouts/AppLayout";
 import CalendarView from "../../features/calendar/CalendarView";
 import Modal from "../../ui/Modal";
 import EventForm from "../../features/calendar/EventForm";
-import { useSettingsStore } from "../../store/setting";
 import { invoke } from "@tauri-apps/api/core";
 import { CalendarEvent } from "../../features/calendar/calendar.types";
 
@@ -12,7 +11,6 @@ import { CalendarEvent } from "../../features/calendar/calendar.types";
 export default function CalendarPage() {
 
   const calendar = useCalendar();
-  const theme = useSettingsStore(s => s.theme);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWindowLocked, setIsWindowLocked] = useState(true);
@@ -33,7 +31,7 @@ export default function CalendarPage() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (eventId: string) => {
+  const handleEdit = (eventId: number) => {
     const event = calendar.events.find(e => e.id === eventId);
     if (!event) return;
 
@@ -59,50 +57,51 @@ export default function CalendarPage() {
     : calendar.addNewEvent;
 
 
+  useEffect(() => {
+    invoke("set_edit_mode", { isEdit: isWindowLocked });
+  }, []);
   return (
-    <CalendarLayout theme={theme}>
+    <div
+      className="relative w-full h-full flex flex-col pt-20 bg-transparent transition-all duration-300"
+    >
+      {/* 상단 캐릭터 */}
+      <div className="absolute -top-4.5 left-12 z-[100] pointer-events-none select-none">
+        <img
+          src="/stitch.png"
+          alt="figure"
+          className="h-32 w-auto drop-shadow-[0_5px_5px_rgba(0,0,0,0.2)]"
+        />
+      </div>
+
+
       <div
-        className="relative w-full h-full flex flex-col pt-20 bg-transparent transition-all duration-300"
-      >
-        {/* 상단 캐릭터 */}
-        <div className="absolute -top-4.5 left-12 z-[100] pointer-events-none select-none">
-          <img
-            src="/stitch.png"
-            alt="figure"
-            className="h-32 w-auto drop-shadow-[0_5px_5px_rgba(0,0,0,0.2)]"
-          />
-        </div>
+        data-tauri-drag-region={!isWindowLocked ? "true" : undefined}
+        className={`w-full h-full bg-transparent font-SiganpyoR transition-all duration-300 }`} >
 
+        <div className="window-shadow rounded-xl w-full h-full">
+          <div className="window-frame flex flex-col rounded-xl text-zinc-100 overflow-hidden w-full h-full">
 
-        <div
-          data-tauri-drag-region={!isWindowLocked ? "true" : undefined}
-          className={`w-full h-full bg-transparent font-SiganpyoR transition-all duration-300 }`} >
-
-          <div className="window-shadow rounded-xl w-full h-full">
-            <div className="window-frame flex flex-col rounded-xl text-zinc-100 overflow-hidden w-full h-full">
-
-              {/* Calendar 그리드 */}
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <CalendarView
-                  calendar={calendar}
-                  windowControls={windowControls}
-                  eventEditor={eventEditor}
-                />
-              </div>
-
-              {/* 일정에디터 모달 */}
-              <Modal isOpen={isModalOpen} onClose={closeModal}>
-                <EventForm
-                  event={editingEvent ?? undefined}
-                  baseDate={calendar.today}
-                  onSubmit={handleSubmit}
-                  onClose={closeModal}
-                />
-              </Modal>
+            {/* Calendar 그리드 */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <CalendarView
+                calendar={calendar}
+                windowControls={windowControls}
+                eventEditor={eventEditor}
+              />
             </div>
+
+            {/* 일정에디터 모달 */}
+            <Modal isOpen={isModalOpen} onClose={closeModal}>
+              <EventForm
+                event={editingEvent ?? undefined}
+                baseDate={calendar.today}
+                onSubmit={handleSubmit}
+                onClose={closeModal}
+              />
+            </Modal>
           </div>
         </div>
       </div>
-    </CalendarLayout >
+    </div>
   );
 }

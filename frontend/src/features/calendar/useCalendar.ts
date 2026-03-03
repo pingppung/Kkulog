@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { startOfDay } from "date-fns";
 import { buildCalendarDays, splitEventByWeek } from "./calendar.utils";
-import { fetchEvents, createEvent, updateEvent } from "./api";
+import { fetchEvents, createEvent, updateEvent, deleteEvent } from "./api";
 import { CalendarDay, CalendarEvent, EventBar } from "./calendar.types";
 
 export function useCalendar() {
@@ -14,7 +14,7 @@ export function useCalendar() {
 
   /* ===== 일정 ===== */
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
 
   /* ===== 월 캐시 ===== */
   const monthCache = useRef<Map<string, CalendarEvent[]>>(new Map());
@@ -64,7 +64,6 @@ export function useCalendar() {
       setEvents(data);
     });
   }, [currentYear, currentMonth]);
-
   /* ===== 현재 캘린더 범위에 보이는 일정 ===== */
 
   const visibleEvents = useMemo(() => {
@@ -147,18 +146,65 @@ export function useCalendar() {
 
   /* ===== 일정 CRUD ===== */
 
-  const addNewEvent = async (event: CalendarEvent) => {
-    const newEvent = await createEvent(event);
-    setEvents(prev => [...prev, newEvent]);
-  };
+  const createEventHandler = async (event: CalendarEvent) => {
+    const createdRaw = await createEvent(event);
 
-  const updateEventHandler = async (event: CalendarEvent) => {
-    const updated = await updateEvent(event);
-    setEvents(prev =>
-      prev.map(ev => (ev.id === updated.id ? updated : ev))
+    const created = {
+      ...createdRaw,
+      start: new Date(createdRaw.start),
+      end: new Date(createdRaw.end),
+    };
+
+    setEvents(prev => [...prev, created]);
+
+    const monthKey = `${currentYear}-${currentMonth}`;
+
+    if (monthCache.current.has(monthKey)) {
+      const cached = monthCache.current.get(monthKey)!;
+      monthCache.current.set(monthKey, [...cached, created]);
+    }
+
+    console.log("created:", created);
+    console.log("visible check:",
+      created.start <= calendarDays[calendarDays.length - 1].date,
+      created.end >= calendarDays[0].date
     );
   };
 
+  const updateEventHandler = async (event: CalendarEvent) => {
+    const updatedRaw = await updateEvent(event);
+
+    const updated = {
+      ...updatedRaw,
+      start: new Date(updatedRaw.start),
+      end: new Date(updatedRaw.end),
+    };
+    setEvents(prev =>
+      prev.map(ev => (ev.id === updated.id ? updated : ev))
+    );
+
+    const monthKey = `${currentYear}-${currentMonth}`;
+
+    if (monthCache.current.has(monthKey)) {
+      const cached = monthCache.current.get(monthKey)!;
+
+      const newCached = cached.map(ev =>
+        ev.id === updated.id ? updated : ev
+      );
+
+      monthCache.current.set(monthKey, newCached);
+    }
+  };
+
+  const deleteEventHandler = async (id: number) => {
+    try {
+      await deleteEvent(id); // api 호출
+
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      console.error("삭제 실패", err);
+    }
+  };
   return {
     today,
 
@@ -175,7 +221,7 @@ export function useCalendar() {
     prevMonth,
     nextMonth,
 
-    addNewEvent,
+    addNewEvent: createEventHandler,
     updateEvent: updateEventHandler,
   };
 }

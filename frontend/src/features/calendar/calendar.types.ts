@@ -6,16 +6,16 @@ export interface CalendarDay {
 }
 
 export interface CalendarEvent {
-  id: string;
+  id?: number;
   title: string;
   start: Date;
   end: Date;
   color: string;
-  description?: string;
+  memo?: string;
 }
 
 export interface EventSegment {
-  eventId: string;
+  eventId: number;
   title: string;
   color: string;
   weekIndex: number;

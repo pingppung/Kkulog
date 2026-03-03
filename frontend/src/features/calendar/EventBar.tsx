@@ -1,5 +1,5 @@
 interface EventBarProps {
-  eventId: string;
+  eventId: number;
 
   title: string;
   color: string;
@@ -9,7 +9,7 @@ interface EventBarProps {
   row?: number;
 
   isSelected?: boolean;
-  onSelect: (eventId: string) => void;
+  onSelect: (eventId: number) => void;
   onDoubleClick?: () => void;
 }
 export default function EventBar({

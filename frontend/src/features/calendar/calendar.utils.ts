@@ -82,16 +82,14 @@ export function splitEventByWeek(
     const segmentEndIndex = Math.min(weekEndIndex, endIndex);
 
     segments.push({
-      eventId: event.id,
+      eventId: event.id!,
       title: event.title,
       color: event.color,
       weekIndex,
       colStart: calendarDays[segmentStartIndex].weekday,
       span: segmentEndIndex - segmentStartIndex + 1,
     });
-
     cur = weekEndIndex + 1;
   }
-
   return segments;
 }
