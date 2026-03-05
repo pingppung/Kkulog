@@ -41,6 +41,6 @@ model Event {
   calendarId Int
   calendar   Calendar  @relation(fields: [calendarId], references: [id])
 
-  @@index([calendarId])
+  @@index([calendarId, start])
 }
 
