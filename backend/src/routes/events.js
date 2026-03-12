@@ -112,6 +112,20 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    console.log(id);
+    await prisma.event.delete({
+      where: { id },
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("이벤트 삭제 실패:", err);
+    res.status(500).json({ message: "삭제 실패" });
+  }
+});
 export default router;
 
 

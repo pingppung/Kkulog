@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { EventFormProps } from "./calendar.types";
 import DateRangePicker from "../../ui/DateRangePicker";
+import { Trash2 } from "lucide-react";
 
 type PickerTarget = "start" | "end" | null;
 
 export default function EventForm({
   event,
   baseDate,
+  onDelete,
   onSubmit,
   onClose,
 }: EventFormProps) {
@@ -120,6 +122,7 @@ export default function EventForm({
 
     const ok = window.confirm("이 일정을 삭제하시겠습니까?");
     if (!ok) return;
+    await onDelete(event.id!); 
     onClose();
   };
   /* ===================== effects ===================== */
@@ -164,15 +167,15 @@ export default function EventForm({
           {event && (
             <button
               onClick={handleDelete}
-              className="text-red-400 hover:text-red-600 transition"
+              className="text-red-400 hover:text-red-600 transition cursor-pointer"
             >
-              🗑
+              <Trash2 size={20} />
             </button>
           )}
 
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
+            className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
           >
             ✕
           </button>

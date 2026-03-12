@@ -30,6 +30,7 @@ export interface EventBar extends EventSegment {
 export interface EventFormProps {
   event?: CalendarEvent;
   baseDate: Date;
+  onDelete: (eventId: number) => Promise<void> | void;
   onSubmit: (event: CalendarEvent) => Promise<void> | void;
   onClose: () => void;
 }

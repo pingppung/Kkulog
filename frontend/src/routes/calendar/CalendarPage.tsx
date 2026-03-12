@@ -39,6 +39,10 @@ export default function CalendarPage() {
     setIsModalOpen(true);
   };
 
+  const handleDelete = async (eventId: number) => {
+    await calendar.deleteEvent(eventId);
+    setIsModalOpen(false);
+  };
   const closeModal = () => {
     setIsModalOpen(false);
   }
@@ -60,7 +64,7 @@ export default function CalendarPage() {
   useEffect(() => {
     invoke("set_edit_mode", { isEdit: isWindowLocked });
   }, []);
-  
+
   return (
     <div
       className="relative w-full h-full flex flex-col pt-20 bg-transparent transition-all duration-300"
@@ -96,6 +100,7 @@ export default function CalendarPage() {
               <EventForm
                 event={editingEvent ?? undefined}
                 baseDate={calendar.today}
+                onDelete={handleDelete}
                 onSubmit={handleSubmit}
                 onClose={closeModal}
               />

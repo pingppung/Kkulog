@@ -250,12 +250,20 @@ export function useCalendar() {
   };
 
   const deleteEventHandler = async (id: number) => {
-    try {
-      await deleteEvent(id); // api 호출
+    await deleteEvent(id);
 
-      setEvents((prev) => prev.filter((e) => e.id !== id));
-    } catch (err) {
-      console.error("삭제 실패", err);
+    // 1️⃣ UI 상태 제거
+    setEvents(prev => prev.filter(e => e.id !== id));
+
+    // 2️⃣ cache 제거
+    const monthKey = `${currentYear}-${currentMonth}`;
+
+    if (monthCache.current.has(monthKey)) {
+      const cached = monthCache.current.get(monthKey)!;
+      monthCache.current.set(
+        monthKey,
+        cached.filter(e => e.id !== id)
+      );
     }
   };
   return {
@@ -276,5 +284,6 @@ export function useCalendar() {
 
     addNewEvent: createEventHandler,
     updateEvent: updateEventHandler,
+    deleteEvent: deleteEventHandler,
   };
 }
