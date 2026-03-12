@@ -27,7 +27,6 @@ router.get('/', async (req, res) => {
         start: "asc",
       },
     });
-
     res.json(events);
   } catch (err) {
     console.error("진짜 에러 내용:", err);

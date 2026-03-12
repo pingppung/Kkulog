@@ -55,5 +55,18 @@
   --selected-border: 2px solid #FDE047; /* 선택 테두리 */
 }
 
+[data-theme="default"] {
+  --cell-today-bg: #000000;     /* 오늘도 배경 동일 */
+  --cell-current-bg: #ffffff;   /* 현재 달 */
+  --cell-weekend-bg: #fafafa;   /* 주말 살짝 회색 */
+  --cell-other-bg: #f5f5f5;     /* 다른 달 */
+
+  --cell-text-main: #000000;    /* 메인 텍스트 (검정) */
+  --cell-text-muted: #9ca3af;   /* 흐린 날짜 (연회색) */
+
+  --accent-color: #000000;      /* chevron / 아이콘 */
+  --selected-border: 2px solid #000000; /* 선택 테두리 */
+}
+
 
 

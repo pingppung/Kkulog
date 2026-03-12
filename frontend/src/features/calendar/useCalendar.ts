@@ -5,6 +5,7 @@ import { fetchEvents, createEvent, updateEvent, deleteEvent } from "./api";
 import { CalendarDay, CalendarEvent, EventBar } from "./calendar.types";
 
 export function useCalendar() {
+  const renderStartRef = useRef<number | null>(null);
   /* ===== 오늘 ===== */
   const [today] = useState(() => startOfDay(new Date()));
 
@@ -34,15 +35,17 @@ export function useCalendar() {
   }, [calendarDays]);
 
   /* ===== 월 변경 시 range 기반 fetch ===== */
-
   useEffect(() => {
     if (!calendarDays.length) return;
 
     const monthKey = `${currentYear}-${currentMonth}`;
 
-    // 1. 캐시에 있으면 서버 요청 안 함
     if (monthCache.current.has(monthKey)) {
+      console.log("📦 cache hit:", monthKey);
+
+      renderStartRef.current = performance.now();
       setEvents(monthCache.current.get(monthKey)!);
+
       return;
     }
 
@@ -52,7 +55,6 @@ export function useCalendar() {
     fetchEvents(gridStart, gridEnd).then(data => {
       const MAX_CACHE = 6;
 
-      // 캐시 크기 제한
       if (monthCache.current.size >= MAX_CACHE) {
         const oldestKey = monthCache.current.keys().next().value;
         if (oldestKey !== undefined) {
@@ -61,11 +63,35 @@ export function useCalendar() {
       }
 
       monthCache.current.set(monthKey, data);
+
+      // 렌더 시작 기록
+      renderStartRef.current = performance.now();
+
       setEvents(data);
     });
-  }, [currentYear, currentMonth]);
-  /* ===== 현재 캘린더 범위에 보이는 일정 ===== */
 
+  }, [currentYear, currentMonth]);
+
+  useEffect(() => {
+    if (!events.length || renderStartRef.current === null) return;
+
+    requestAnimationFrame(() => {
+      const renderEnd = performance.now();
+
+      console.log("\n================ Render Performance ================");
+      console.log(`Events Rendered : ${events.length.toLocaleString()}`);
+      console.log(
+        `Render Time     : ${(renderEnd - renderStartRef.current!).toFixed(2)} ms`
+      );
+      console.log("===================================================\n");
+
+      renderStartRef.current = null;
+    });
+
+  }, [events]);
+
+
+  /* ===== 현재 캘린더 범위에 보이는 일정 ===== */
   const visibleEvents = useMemo(() => {
     if (!events.length || !calendarDays.length) return [];
 
@@ -89,26 +115,49 @@ export function useCalendar() {
   /* ===== 이벤트 바 레이아웃 계산 ===== */
 
   const eventBars: EventBar[] = useMemo(() => {
-    const bars: EventBar[] = [];
+    const sortedSegments = [...segments].sort((a, b) => {
+      if (a.weekIndex !== b.weekIndex) {
+        return a.weekIndex - b.weekIndex
+      }
+      return a.colStart - b.colStart
+    })
 
-    segments.forEach(seg => {
-      let row = 0;
+    const bars: EventBar[] = []
 
-      while (
-        bars.some(
-          b =>
-            b.weekIndex === seg.weekIndex &&
-            b.row === row &&
-            !(
-              seg.colStart + seg.span <= b.colStart ||
-              b.colStart + b.span <= seg.colStart
-            )
-        )
-      ) {
-        row++;
+    // week → rows → bars
+    const rowsByWeek: Record<number, EventBar[][]> = {}
+
+    sortedSegments.forEach(seg => {
+
+      if (!rowsByWeek[seg.weekIndex]) {
+        rowsByWeek[seg.weekIndex] = []
       }
 
-      bars.push({
+      const rows = rowsByWeek[seg.weekIndex]
+
+      let row = 0
+
+      while (true) {
+
+        if (!rows[row]) {
+          rows[row] = []
+          break
+        }
+
+        const conflict = rows[row].some(b =>
+          !(
+            seg.colStart + seg.span <= b.colStart ||
+            b.colStart + b.span <= seg.colStart
+          )
+        )
+
+        if (!conflict) break
+
+        row++
+      }
+
+
+      const bar: EventBar = {
         eventId: seg.eventId,
         title: seg.title,
         color: seg.color,
@@ -116,7 +165,11 @@ export function useCalendar() {
         colStart: seg.colStart,
         span: seg.span,
         row,
-      });
+      };
+
+      rows[row].push(bar)
+      bars.push(bar)
+
     });
 
     return bars;

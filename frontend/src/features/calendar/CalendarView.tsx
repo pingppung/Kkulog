@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import DayCell from "./DayCell";
 import EventBar from "./EventBar";
 import { useCalendar } from "./useCalendar";
@@ -15,7 +16,6 @@ interface CalendarViewProps {
     edit: (eventId: number) => void;
   };
 }
-
 
 // 달력 ui
 export default function CalendarView({
@@ -37,6 +37,25 @@ export default function CalendarView({
 
   const { isLocked, toggleLock } = windowControls;
   const { create: handleCreate, edit: handleEdit } = eventEditor;
+
+
+  //이미 만들어진 bar들을 주별로 그룹화
+  const eventBarsByWeek = useMemo(() => {
+    const map: Record<number, typeof eventBars> = {};
+
+    for (const bar of eventBars) {
+      if (bar.row >= 5) continue;
+
+      if (!map[bar.weekIndex]) {
+        map[bar.weekIndex] = [];
+      }
+
+      map[bar.weekIndex].push(bar);
+    }
+
+    return map;
+  }, [eventBars]);
+
   return (
     <div className="w-full h-full flex flex-col relative">
 
@@ -94,22 +113,20 @@ export default function CalendarView({
             </div>
 
             <div className="absolute pt-4 inset-0 grid grid-cols-7 min-h-0 pointer-events-none calendar-event-grid">
-              {eventBars
-                .filter(b => b.weekIndex === weekIdx)
-                .map(bar => (
-                  <EventBar
-                    key={`${bar.eventId}-${bar.weekIndex}-${bar.row}`}
-                    eventId={bar.eventId}
-                    title={bar.title}
-                    color={bar.color}
-                    colStart={bar.colStart}
-                    span={bar.span}
-                    row={bar.row}
-                    isSelected={bar.eventId === selectedEventId}
-                    onSelect={setSelectedEventId}
-                    onDoubleClick={() => handleEdit(bar.eventId)}
-                  />
-                ))}
+              {(eventBarsByWeek[weekIdx] || []).map(bar => (
+                <EventBar
+                  key={`${bar.eventId}-${bar.weekIndex}-${bar.row}`}
+                  eventId={bar.eventId}
+                  title={bar.title}
+                  color={bar.color}
+                  colStart={bar.colStart}
+                  span={bar.span}
+                  row={bar.row}
+                  isSelected={bar.eventId === selectedEventId}
+                  onSelect={setSelectedEventId}
+                  onDoubleClick={() => handleEdit(bar.eventId)}
+                />
+              ))}
             </div>
           </div>
         ))}

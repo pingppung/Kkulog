@@ -60,16 +60,17 @@ export default function CalendarPage() {
   useEffect(() => {
     invoke("set_edit_mode", { isEdit: isWindowLocked });
   }, []);
+  
   return (
     <div
       className="relative w-full h-full flex flex-col pt-20 bg-transparent transition-all duration-300"
     >
       {/* 상단 캐릭터 */}
-      <div className="absolute -top-4.5 left-12 z-[100] pointer-events-none select-none">
+      <div className="absolute -top-4.5 left-8 z-[100] pointer-events-none select-none">
         <img
-          src="/stitch.png"
+          src="/c4.png"
           alt="figure"
-          className="h-32 w-auto drop-shadow-[0_5px_5px_rgba(0,0,0,0.2)]"
+          className="h-32 max-w-[50vw] w-auto drop-shadow-[0_5px_5px_rgba(0,0,0,0.2)]"
         />
       </div>
 

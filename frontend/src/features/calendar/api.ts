@@ -28,12 +28,24 @@ export async function fetchEvents(
   start: Date,
   end: Date
 ): Promise<CalendarEvent[]> {
+
+  const startTime = performance.now();
+
   const res = await api.get<CalendarEvent[]>("/events", {
     params: {
       start: start.toISOString(),
       end: end.toISOString(),
     },
   });
+
+  const endTime = performance.now();
+  const duration = endTime - startTime;
+
+  console.log("\n================ API Performance ===================");
+  console.log(`Events Received : ${res.data.length.toLocaleString()}`);
+  console.log(`API Response    : ${duration.toFixed(2)} ms`);
+  console.log("===================================================\n");
+
   return res.data.map((ev: any) => ({
     ...ev,
     start: new Date(ev.start),

@@ -49,6 +49,7 @@ function toYMD(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+//이벤트 기간을 주 단위로 쪼개는 역할
 export function splitEventByWeek(
   event: CalendarEvent,
   calendarDays: CalendarDay[]
@@ -57,14 +58,13 @@ export function splitEventByWeek(
   const segments: EventSegment[] = [];
 
   const eventStart = toYMD(event.start);
-  const eventEnd   = toYMD(event.end);
+  const eventEnd = toYMD(event.end);
 
   let startIndex = -1;
   let endIndex = -1;
 
-  calendarDays.forEach((d, i) => {
-    const day = toYMD(d.date);
-    
+  const calendarYMD = calendarDays.map(d => toYMD(d.date));
+  calendarYMD.forEach((day, i) => {
     if (day >= eventStart && startIndex === -1) startIndex = i;
     if (day <= eventEnd) endIndex = i;
   });
