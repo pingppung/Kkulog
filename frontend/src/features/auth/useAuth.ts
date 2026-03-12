@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getMeApi, loginApi, signupApi } from "./api";
+import { getMeApi, loginApi, signupApi, checkUsernameApi } from "./api";
 import { useAuthStore } from "../../store/auth"
 import { AuthForm } from "./auth.types";
 
@@ -14,6 +14,12 @@ export default function useAuth() {
     }
 
     return res;
+  };
+
+  // 아이디 중복 확인
+  const checkUsername = async (username: string) => {
+    const res = await checkUsernameApi(username);
+    return res.available;
   };
 
   const signup = async (form: AuthForm) => {
@@ -34,6 +40,6 @@ export default function useAuth() {
       clearUser();
     }
   };
-  
-  return {  login, signup, logout, checkAuth };
+
+  return { login, signup, logout, checkAuth, checkUsername };
 }

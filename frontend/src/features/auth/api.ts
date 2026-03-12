@@ -23,6 +23,19 @@ export const loginApi = async (
   }
 };
 
+// 아이디 중복 확인
+export const checkUsernameApi = async (username: string) => {
+  try {
+    const { data } = await api.get("/auth/check-username", {
+      params: { username },
+    });
+
+    return data; // 사용 가능
+  } catch (err: any) {
+    return err.response.data; // 중복 메시지
+  }
+};
+
 // 회원가입
 export const signupApi = async (
   form: AuthForm

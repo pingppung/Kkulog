@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm, AuthResult } from "./auth.types";
+import useAuth from "./useAuth";
 
 interface LoginProps {
-  onSubmit: (form: AuthForm) => Promise<AuthResult>;
   onSwitch: () => void;
 }
 
-export default function Login({ onSubmit, onSwitch }: LoginProps) {
+export default function Login({ onSwitch }: LoginProps) {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState<AuthForm>({
     username: "",
     password: "",
@@ -21,7 +22,7 @@ export default function Login({ onSubmit, onSwitch }: LoginProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const res = await onSubmit(form);
+    const res = await login(form);
 
     if (!res.success) {
       alert(res.message);
@@ -30,18 +31,16 @@ export default function Login({ onSubmit, onSwitch }: LoginProps) {
     navigate("/");
   };
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen font-gangwon">
 
-      <div className="w-full max-w-sm space-y-6 bg-white p-8">
+      <div className="w-full max-w-sm space-y-10">
 
         {/* header */}
         <header className="text-center space-y-2">
-          <h2 className="text-xl font-semibold text-gray-700">
-            로그인
-          </h2>
+          <h2 className="text-4xl font-bold">로그인</h2>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* 아이디 */}
           <input
@@ -50,10 +49,17 @@ export default function Login({ onSubmit, onSwitch }: LoginProps) {
             value={form.username}
             onChange={handleChange}
             placeholder="아이디"
-            className="w-full bg-indigo-50 rounded-3xl px-4 py-3 text-sm
-                     placeholder-gray-400 outline-none
-                     focus:ring-2 focus:ring-indigo-200
-                     transition"
+            className="
+              w-full
+              bg-white
+              border
+              border-gray-200
+              rounded-lg
+              px-4 py-3
+              outline-none
+              focus:border-gray-400
+              transition
+            "
           />
 
           {/* 비밀번호 */}
@@ -63,19 +69,33 @@ export default function Login({ onSubmit, onSwitch }: LoginProps) {
             value={form.password}
             onChange={handleChange}
             placeholder="비밀번호"
-            className="w-full bg-indigo-50 rounded-3xl px-4 py-3 text-sm
-                     placeholder-gray-400 outline-none
-                     focus:ring-2 focus:ring-indigo-200
-                     transition"
+            className="
+              w-full
+              bg-white
+              border
+              font-sans
+              border-gray-200
+              rounded-lg
+              px-4 py-3
+              outline-none
+              focus:border-gray-400
+              transition
+            "
           />
 
           {/* 로그인 버튼 */}
           <button
             type="submit"
-            className="w-full py-3 rounded-3xl font-semibold
-                     bg-indigo-400 text-white
-                     shadow-md hover:scale-[1.02]
-                     hover:bg-indigo-500 transition"
+            className="
+              w-full
+              py-3
+              rounded-xl
+              bg-[#1F2A3A]
+              text-white
+              font-semibold
+              hover:bg-[#111827]
+              transition
+            "
           >
             로그인
           </button>
@@ -88,7 +108,7 @@ export default function Login({ onSubmit, onSwitch }: LoginProps) {
           <button
             type="button"
             onClick={onSwitch}
-            className="text-indigo-400 font-medium hover:underline"
+            className="text-gray-700 underline"
           >
             회원가입
           </button>

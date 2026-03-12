@@ -5,24 +5,44 @@ import { prisma } from "../prisma/index.js";
 
 const router = express.Router();
 
+// 1. 아이디 중복 검사 (GET /api/auth/check-username)
+router.get("/check-username", async (req, res) => {
+  try {
+    const { username } = req.query;
 
-// 1. 회원가입 (POST /api/auth/signup)
+    const exists = await prisma.user.findUnique({
+      where: { username: String(username) },
+    });
+    console.log(exists);
+
+    res.json({
+      available: !exists,
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      message: "서버 오류",
+    });
+  }
+});
+
+// 2. 회원가입 (POST /api/auth/signup)
 router.post("/signup", async (req, res) => {
   try {
     const { username, password } = req.body;
-    console.log(username, password);
-    // 아이디 중복 검사
+
+    //아이디 중복 검사 - 가입할 때 누가 먼저 눌렀을 경우 방지
     const exists = await prisma.user.findUnique({
       where: { username },
     });
-    console.log("중복? :" + exists);
+
     if (exists) {
-      console.log("중복이라네");
       return res.status(400).json({
         success: false,
         message: "이미 사용 중인 아이디입니다.",
       });
     }
+
 
     // 비밀번호 검사
     if (password.length < 6) {
@@ -62,7 +82,7 @@ router.post("/signup", async (req, res) => {
 });
 
 
-// 2. 로그인 (POST /api/auth/login)
+// 3. 로그인 (POST /api/auth/login)
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -122,7 +142,7 @@ router.post("/login", async (req, res) => {
 });
 
 
-// 3. 로그인 상태 확인 (GET /api/auth/me)
+// 4. 로그인 상태 확인 (GET /api/auth/me)
 router.get("/me", (req, res) => {
   try {
     const token = req.cookies.token;
