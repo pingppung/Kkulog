@@ -100,7 +100,6 @@ router.post("/login", async (req, res) => {
     // 비밀번호 확인
     const isMatch = await bcrypt.compare(password, user.password);
 
-    console.log(isMatch);
     if (!isMatch) {
       return res.status(400).json({
         success: false,
@@ -110,17 +109,19 @@ router.post("/login", async (req, res) => {
 
     // JWT 발급
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "7d" }
     );
 
+
     // 쿠키 저장
+
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // 배포 시 true
+      secure: false,
       sameSite: "lax",
-      maxAge: 1000 * 60 * 60,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
     return res.json({
@@ -143,31 +144,40 @@ router.post("/login", async (req, res) => {
 
 
 // 4. 로그인 상태 확인 (GET /api/auth/me)
-router.get("/me", (req, res) => {
+router.get("/me", async (req, res) => {
   try {
     const token = req.cookies.token;
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        user: null,
       });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        username: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+      });
+    }
+
     return res.json({
       success: true,
-      user: {
-        id: decoded.id,
-        username: decoded.username,
-      },
+      user,
     });
 
   } catch (err) {
     return res.status(401).json({
       success: false,
-      user: null,
     });
   }
 });

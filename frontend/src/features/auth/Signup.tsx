@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { AuthForm, AuthResult } from "./auth.types";
-import useAuth from "./useAuth";
+import { signup, checkUsername } from "./useAuth";
 
 interface SignupProps {
   onSwitch: () => void;
 }
 
 export default function Signup({ onSwitch }: SignupProps) {
-  const { signup, checkUsername } = useAuth();
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
 
   const [form, setForm] = useState({
@@ -55,7 +54,7 @@ export default function Signup({ onSwitch }: SignupProps) {
     onSwitch(); // 로그인 화면으로 전환
   };
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
+    <div className="flex items-center justify-center min-h-screen bg-transparent">
 
       <div className="w-full max-w-md min-w-[280px] space-y-8 font-gangwon">
 

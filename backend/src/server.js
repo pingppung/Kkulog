@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.js";
+import eventRouter from "./routes/events.js";
 
 dotenv.config();
 
@@ -16,11 +17,13 @@ app.use(
 );
 
 app.use(express.json());
-app.use(cookieParser());   // ← 이거 추가
+app.use(cookieParser()); 
 
 app.get("/", (req, res) => res.send("✅ Backend is running"));
 
+
 app.use("/api/auth", authRouter);
+app.use('/api/events', eventRouter);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () =>

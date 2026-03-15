@@ -65,3 +65,10 @@ export const getMeApi = async (): Promise<User | null> => {
     return null;
   }
 };
+
+//로그아웃
+export const logoutApi = async () => {
+  await api.post("/auth/logout", {}, {
+    withCredentials: true
+  });
+};

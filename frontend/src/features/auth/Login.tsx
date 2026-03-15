@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm, AuthResult } from "./auth.types";
-import useAuth from "./useAuth";
+import { login } from "./useAuth";
 
 interface LoginProps {
   onSwitch: () => void;
@@ -9,7 +9,6 @@ interface LoginProps {
 
 export default function Login({ onSwitch }: LoginProps) {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [form, setForm] = useState<AuthForm>({
     username: "",
     password: "",
@@ -31,7 +30,7 @@ export default function Login({ onSwitch }: LoginProps) {
     navigate("/");
   };
   return (
-    <div className="flex items-center justify-center min-h-screen font-gangwon">
+    <div className="flex items-center justify-center min-h-screen font-gangwon bg-transparent">
 
       <div className="w-full max-w-sm space-y-10">
 

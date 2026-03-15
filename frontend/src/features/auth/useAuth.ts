@@ -1,45 +1,55 @@
 import { useState } from "react";
-import { getMeApi, loginApi, signupApi, checkUsernameApi } from "./api";
+import { getMeApi, loginApi, signupApi, checkUsernameApi, logoutApi } from "./api";
 import { useAuthStore } from "../../store/auth"
 import { AuthForm } from "./auth.types";
 
-export default function useAuth() {
-  const { setUser, clearUser } = useAuthStore();
 
-  const login = async (form: AuthForm) => {
-    const res = await loginApi(form);
+export const login = async (form: AuthForm) => {
+  const { setUser } = useAuthStore.getState();
 
-    if (res.success && res.user) {
-      setUser(res.user);
-    }
+  const res = await loginApi(form);
 
-    return res;
-  };
+  if (res.success && res.user) {
+    setUser(res.user);
+  }
 
-  // 아이디 중복 확인
-  const checkUsername = async (username: string) => {
-    const res = await checkUsernameApi(username);
-    return res.available;
-  };
+  return res;
+};
 
-  const signup = async (form: AuthForm) => {
-    const res = await signupApi(form);
-    return res;
-  };
 
-  const logout = () => {
+export const signup = async (form: AuthForm) => {
+  const res = await signupApi(form);
+  return res;
+};
+
+
+export const checkUsername = async (username: string) => {
+  const res = await checkUsernameApi(username);
+  return res.available;
+};
+
+
+export const checkAuth = async () => {
+  const { setUser, clearUser } = useAuthStore.getState();
+
+  const user = await getMeApi();
+
+  if (user) {
+    setUser(user);
+  } else {
     clearUser();
-  };
+  }
+};
 
-  const checkAuth = async () => {
-    const user = await getMeApi();
 
-    if (user) {
-      setUser(user);
-    } else {
-      clearUser();
-    }
-  };
+export const logout = async () => {
+  const { clearUser } = useAuthStore.getState();
 
-  return { login, signup, logout, checkAuth, checkUsername };
-}
+  try {
+    await logoutApi();
+  } catch (err) {
+    console.error("logout failed", err);
+  }
+
+  clearUser();
+};

@@ -11,5 +11,36 @@ model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+
+  calendars Calendar[]
 }
+
+model Calendar {
+  id        Int        @id @default(autoincrement())
+  name      String
+  createdAt DateTime   @default(now())
+
+  // 나중에 auth merge 대비
+  userId    Int?
+  user      User?      @relation(fields: [userId], references: [id])
+
+  events    Event[]
+}
+
+
+model Event {
+  id        Int       @id @default(autoincrement())
+  title     String
+  memo      String?
+  start     DateTime
+  end       DateTime
+  color     String?
+  createdAt DateTime  @default(now())
+
+  calendarId Int
+  calendar   Calendar  @relation(fields: [calendarId], references: [id])
+
+  @@index([calendarId, start])
+}
+

@@ -1,0 +1,72 @@
+[data-theme="lavender"] {
+  --cell-today-bg: #756ab6;
+  --cell-current-bg: #bcb3c2;
+  --cell-weekend-bg: #e0aed0;
+  --cell-other-bg: #ffe5e5c4;
+
+  --cell-text-main: #2e2a3b;
+  --cell-text-muted: rgba(0,0,0,0.35);
+}
+
+[data-theme="sage"] {
+  --cell-today-bg: #5B7C6E;
+  --cell-current-bg: #8FAEA1;
+  --cell-weekend-bg: #CFE3DB;
+  --cell-other-bg: #F2F7F5;
+
+  --cell-text-main: #1f2937;
+  --cell-text-muted: rgba(0,0,0,0.35);
+}
+
+[data-theme="mono"] {
+  --cell-today-bg: #111827;
+  --cell-current-bg: #E5E7EB;
+  --cell-weekend-bg: #F3F4F6;
+  --cell-other-bg: #FAFAFA;
+
+  --cell-text-main: #111827;
+  --cell-text-muted: #9CA3AF;
+}
+
+[data-theme="stitch"] {
+  --cell-today-bg: #1E40AF;
+  --cell-current-bg: #DBEAFE;
+  --cell-weekend-bg: #FBCFE8;
+  --cell-other-bg: #EFF6FF;
+
+  --cell-text-main: #1E3A8A;
+  --cell-text-muted: #F472B6; 
+
+  --accent-color: #1E40AF;  /* chevron 등 */
+  --selected-border: 2px solid #F472B6; /* 선택 테두리 */
+}
+
+
+[data-theme="minion"] {
+  --cell-today-bg: #1E3A8A;
+  --cell-current-bg: #DBEAFE; 
+  --cell-weekend-bg: #FDE047;
+  --cell-other-bg: #FFFBEB;     
+
+  --cell-text-main: #111827;  
+  --cell-text-muted: #1E3A8A;
+
+  --accent-color: #1E3A8A;  /* chevron 등 */
+  --selected-border: 2px solid #FDE047; /* 선택 테두리 */
+}
+
+[data-theme="default"] {
+  --cell-today-bg: #000000;     /* 오늘도 배경 동일 */
+  --cell-current-bg: #ffffff;   /* 현재 달 */
+  --cell-weekend-bg: #fafafa;   /* 주말 살짝 회색 */
+  --cell-other-bg: #f5f5f5;     /* 다른 달 */
+
+  --cell-text-main: #000000;    /* 메인 텍스트 (검정) */
+  --cell-text-muted: #9ca3af;   /* 흐린 날짜 (연회색) */
+
+  --accent-color: #000000;      /* chevron / 아이콘 */
+  --selected-border: 2px solid #000000; /* 선택 테두리 */
+}
+
+
+
