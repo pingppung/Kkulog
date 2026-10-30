@@ -1,21 +1,19 @@
-import { useEffect } from "react";
+
 import { logout } from "../features/auth/useAuth";
 import { useAuthStore } from "../store/auth";
 import { useNavigate } from "react-router-dom";
-import { invoke } from "@tauri-apps/api/core";
+
 import { LogOut } from "lucide-react";
 
 export default function Main() {
-  const { user, loggedIn } = useAuthStore();
+  const { loggedIn } = useAuthStore();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
   };
 
-  useEffect(() => {
-    invoke("set_edit_mode", { isEdit: true });
-  }, []);
+
 
 
   return (

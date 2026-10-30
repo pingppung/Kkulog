@@ -1,53 +1,13 @@
-
-import { useEffect } from "react";
-import { HashRouter, Routes, Route } from "react-router-dom";
-
 import AppLayout from "../layouts/AppLayout";
 import CalendarPage from "../routes/calendar/CalendarPage";
-import MainPage from "../routes/MainPage";
-import AuthPage from "../routes/AuthPage";
-
-import { useAuthStore } from "../store/auth";
-import { getMeApi } from "../features/auth/api";
-
-function App() {
-  const setUser = useAuthStore((s) => s.setUser);
-  const clearUser = useAuthStore((s) => s.clearUser);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const user = await getMeApi();
-
-      if (user) {
-        setUser(user);
-      } else {
-        clearUser();
-      }
-    };
-
-    checkAuth();
-  }, []);
-  
-  return (
-    <HashRouter>
-      <Routes>
-
-        {/* 랜딩 */}
-        <Route path="/" element={<MainPage />} />
-
-        {/* 로그인 */}
-        <Route path="/auth" element={<AuthPage />} />
-
-        {/* 앱 영역 */}
-        <Route element={<AppLayout />}>
-          <Route path="/calendar" element={<CalendarPage />} />
-          {/* <Route path="/diary" element={<DiaryPage />} />
-          <Route path="/finance" element={<FinancePage />} /> */}
-        </Route>
-
-      </Routes>
-    </HashRouter>
-  );
+import SettingsPage from "../routes/SettingsPage";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+export default function App() {
+  // AuthPage와 MainPage는 보관만 하고 현재 라우트에는 연결하지 않습니다.
+  return <HashRouter><Routes><Route element={<AppLayout />}>
+    <Route path="/" element={<CalendarPage />} />
+    <Route path="/settings" element={<SettingsPage />} />
+    <Route path="/settings/colors" element={<Navigate to="/settings?tab=display" replace />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Route></Routes></HashRouter>;
 }
-
-export default App;

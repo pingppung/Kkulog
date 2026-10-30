@@ -25,6 +25,7 @@
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": false,
+        "alwaysOnBottom": true,
         "skipTaskbar": true,
         "focus": false
       }

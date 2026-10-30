@@ -1,24 +1,110 @@
 @import "tailwindcss";
 @import "./features/theme/theme.css";
 
+/* 캘린더 상단 */
+@layer components {
+  .calendar-header {
+    position: relative;
+    flex-shrink: 0;
+    padding: 9px 14px;
+    background: transparent;
+    color: #151922;
+    font-family: var(--app-font, "Segoe UI", "Malgun Gothic", sans-serif);
+    letter-spacing: -0.3px;
+  }
+  .calendar-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    white-space: nowrap;
+  }
+  .calendar-toolbar h2 { margin: 0 5px 0 0; font-size: 17px; font-weight: 600; flex-shrink: 0; }
+  .calendar-navigation { display: flex; gap: 3px; flex-shrink: 0; }
+  .calendar-toolbar-button {
+    display: grid; place-items: center; width: 28px; height: 28px;
+    flex-shrink: 0; border: 1px solid #e5e7ed; border-radius: 7px;
+    background: rgb(255 255 255 / 42%); color: #202530; cursor: pointer;
+  }
+  .calendar-toolbar-button:hover { background: #f1f3f6; }
+  .calendar-today-button {
+    height: 28px; padding: 0 9px; border: 1px solid #e5e7ed;
+    border-radius: 7px; background: rgb(255 255 255 / 42%); color: #252b37;
+    font: inherit; font-size: 12px; flex-shrink: 0; cursor: pointer;
+  }
+  .calendar-view-buttons {
+    display: flex;
+    flex-shrink: 0;
+    height: 28px;
+    padding: 2px;
+    border: 1px solid #e5e7ed;
+    border-radius: 7px;
+    background: rgb(244 245 247 / 45%);
+  }
+  .calendar-view-buttons button {
+    width: 29px;
+    border-radius: 5px;
+    font-size: 11px;
+    color: #657080;
+  }
+  .calendar-view-buttons button.is-active { background: #242831; color: #fff; }
+  .calendar-view-buttons button:disabled { color: #9ca3af; cursor: default; }
+  .calendar-search {
+    display: flex; align-items: center; gap: 7px; flex: 0 1 150px; min-width: 0; margin-left: auto;
+    height: 30px; padding: 0 9px; border: 1px solid #e2e5ec;
+    border-radius: 7px; background: rgb(255 255 255 / 42%); color: #8a90a2;
+  }
+  .calendar-search > svg { flex-shrink: 0; }
+  .calendar-search:focus-within { border-color: #9ba4b5; }
+  .calendar-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #252b37; font: inherit; font-size: 12px; }
+  .calendar-search input::placeholder { font-family: inherit; color: #9299a9; }
+  .calendar-search button { display: grid; place-items: center; flex-shrink: 0; cursor: pointer; }
+  .calendar-create-button {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    height: 30px; padding: 0 10px; border: 1px solid #20232b;
+    border-radius: 7px; background: #20232b; color: #fff;
+    font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0; cursor: pointer;
+  }
+  .calendar-create-button:hover { background: #383d49; }
+  .calendar-header button:focus-visible, .calendar-view-buttons button:focus-visible { outline: 2px solid #7b8ca8; outline-offset: 2px; }
+  .calendar-search-status { position: absolute; right: 14px; top: 100%; z-index: 2; margin: 0; padding: 3px 7px; border-radius: 4px; background: #f1f3f7; color: #72798b; font-size: 10px; }
+  .calendar-weekday-header {
+    border-top: 1px solid #e9ecf1; border-bottom: 1px solid #e9ecf1;
+    background: transparent; color: #343a47; font-family: var(--app-font, "Segoe UI", "Malgun Gothic", sans-serif);
+    font-weight: 600;
+  }
+  @media (max-width: 600px) {
+    .calendar-header { padding: 7px 8px; }
+    .calendar-toolbar { gap: 5px; min-height: 28px; }
+    .calendar-toolbar h2 { margin-right: 0; font-size: 13px; }
+    .calendar-toolbar-button { width: 23px; height: 26px; }
+    .calendar-navigation { gap: 2px; }
+    .calendar-view-buttons button { width: 22px; }
+    .calendar-today-button { padding: 0 5px; }
+    .calendar-search { height: 28px; padding: 0 5px; gap: 4px; }
+    .calendar-search input { font-size: 11px; }
+    .calendar-create-button { width: 28px; height: 28px; padding: 0; }
+    .calendar-create-button span { display: none; }
+  }
+}
 
 @font-face {
   font-family: 'Jalnan';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_four@1.2/JalnanOTF00.woff') format('woff');
+  src: local('Malgun Gothic');
   font-weight: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'GangwonEducationSaeum';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/GangwonEduSaeeum_OTFMediumA.woff') format('woff');
+  src: local('Malgun Gothic');
   font-weight: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'MaruBuri';
-  src: url(https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Bold.woff2);
+  src: local('Malgun Gothic');
   font-weight: 400;
   font-display: swap;
 }
@@ -63,6 +149,7 @@ div#root {
   html,
   body,
   #root {
+    font-family: var(--app-font, "Segoe UI", "Malgun Gothic", sans-serif);
     width: 100%;
     height: 100%;
     margin: 0;
@@ -74,76 +161,284 @@ div#root {
 @layer components {
 
   /* 날짜 셀 스타일 */
+  .calendar-surface {
+    /* Fade only surface colors; keep text, events, and borders readable. */
+    --widget-surface-opacity: var(--calendar-surface-opacity, 72%);
+    --widget-grid-line: color-mix(in srgb, var(--color-grid) 13%, transparent);
+    border: 1px solid rgb(255 255 255 / 45%);
+    border-radius: 16px;
+    background: transparent;
+    box-shadow: 0 3px 14px rgb(32 43 61 / 3%);
+  }
+
+  .calendar-view {
+    font-family: var(--app-font, "Segoe UI", "Malgun Gothic", sans-serif);
+    font-size: 13px;
+    line-height: 1.45;
+    letter-spacing: -0.3px;
+  }
+
+  .calendar-grid-frame {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    overflow: hidden;
+  }
+
+  .calendar-weekday-header {
+    height: 34px;
+    border-top: 0;
+    background: transparent;
+    border-bottom-color: var(--widget-grid-line);
+    font-size: 12px;
+  }
+
+  .calendar-weekday-header > div {
+    display: grid;
+    place-items: center;
+    border-right: 1px solid var(--widget-grid-line);
+  }
+  .calendar-weekday-header > div:last-child { border-right: 0; }
+  .calendar-weeks { overflow: hidden; }
+  .calendar-week { flex: 1; min-height: 0; }
+
   .day-cell {
-    @apply h-full p-1 flex flex-col ring-1 ring-white/5;
-    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 6px 7px;
+    border-right: 1px solid var(--widget-grid-line);
+    border-bottom: 1px solid var(--widget-grid-line);
   }
+  .day-cell:last-child { border-right: 0; }
+  .calendar-week:last-child .day-cell { border-bottom: 0; }
 
-
-  .day-cell--weekday-current {
-    background-color: var(--cell-current-bg);
-    color: var(--cell-text-main);
-  }
-
+  .day-cell--weekday-current,
   .day-cell--sat-current,
   .day-cell--sun-current {
-    background-color: var(--cell-weekend-bg);
+    background: color-mix(in srgb, var(--cell-current-bg) var(--calendar-surface-opacity, 72%), transparent);
     color: var(--cell-text-main);
   }
+  .day-cell--sat-current, .day-cell--sun-current { background: color-mix(in srgb, var(--cell-weekend-bg) var(--calendar-surface-opacity, 72%), transparent); }
+  .day-cell--sat-current .calendar-day-number { color: var(--color-saturday); }
+  .day-cell--sun-current .calendar-day-number { color: var(--color-sunday); }
 
   .day-cell--weekday-other,
   .day-cell--sat-other,
   .day-cell--sun-other {
-    background-color: var(--cell-other-bg);
+    background: color-mix(in srgb, var(--cell-other-bg) var(--calendar-surface-opacity, 72%), transparent);
     color: var(--cell-text-muted);
   }
 
-  .day-cell--today {
-    background-color: var(--cell-today-bg);
-    color: white;
+  .calendar-day-number {
+    display: grid;
+    place-items: center;
+    align-self: flex-start;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  .day-cell--today { background: color-mix(in srgb, var(--color-todayBackground) var(--calendar-surface-opacity, 72%), transparent); }
+  .day-cell--today .calendar-day-number {
+    border-radius: 50%;
+    background: var(--cell-today-bg);
+    color: var(--color-todayText);
+    box-shadow: 0 2px 4px #17203314;
   }
 
-  /* 버튼들 */
-  .nav-btn {
-    @apply w-6 h-6 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 rounded transition;
-  }
-
-  .add-btn {
-    @apply w-7 h-7 flex items-center justify-center text-white bg-blue-500/80 hover:bg-blue-500 rounded-md shadow-sm transition;
-  }
-
-  /* 🎯 부모 그리드: 높이 낮아질 때 간격 조절 */
   .calendar-event-grid {
-    display: grid !important;
-    grid-template-rows: repeat(auto-fill, 12px) !important;
-    row-gap: 2px !important;
+    padding-top: 34px;
+    padding-bottom: 4px;
+    grid-auto-rows: 20px;
+    row-gap: 4px;
+    align-content: start;
     overflow: hidden;
-
-    @media (max-height: 500px) {
-      grid-template-rows: repeat(auto-fill, 6px) !important;
-      row-gap: 1px !important;
-    }
-
-
   }
 
-  /* 🎯 일정 바: 높이 낮아질 때 선으로 변신 */
   .event-bar-inner {
-    @apply absolute inset-x-1 inset-y-0 rounded text-xs text-white flex items-center px-1 overflow-hidden transition-all duration-200;
+    position: absolute;
+    inset: 0 5px 0 0;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 0;
+    gap: 6px;
+    border-radius: 0 6px 6px 0;
+    color: #252b36;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+    overflow: hidden;
+  }
+  .event-bar-inner span { min-width: 0; }
+  .event-color-marker {
+    display: block;
+    width: 3px;
+    height: 100%;
+    min-height: 8px;
+    flex-shrink: 0;
+    border-radius: 0;
+  }
+  .event-bar-inner { font-family: var(--app-font, "Segoe UI", "Malgun Gothic", sans-serif); }
+  .event-bar-inner--filled {
+    background-image: linear-gradient(#ffffff26, #ffffff26);
+    font-weight: 600;
+  }
+  .calendar-event-bar:hover .event-bar-inner--filled {
+    background-image: linear-gradient(#ffffff14, #ffffff14);
+  }
+  .event-bar-inner.selected {
+    outline: 1px solid #8798b2;
+    outline-offset: -1px;
+  }
 
-    @media (max-height: 500px) {
-      top: 50% !important;
-      bottom: auto !important;
-      height: 3px !important;
-      transform: translateY(-50%) !important;
-      padding: 0 !important;
-      border-radius: 999px !important;
-      left: 2px !important;
-      right: 2px !important;
+  .calendar-day-summary {
+    position: absolute;
+    top: 6px;
+    bottom: auto;
+    left: auto;
+    right: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: #7d8491;
+    font-size: 10px;
+    line-height: 12px;
+    cursor: pointer;
+  }
+  .calendar-day-summary:hover { color: #353d4b; }
+  button.calendar-day-number { cursor: pointer; }
+  .calendar-day-summary:focus-visible,
+  button.calendar-day-number:focus-visible { outline: 1px solid #8798b2; outline-offset: 1px; }
 
-      & span {
-        display: none !important;
-      }
+  .calendar-view--compact .calendar-weeks { overflow: hidden; }
+  .calendar-view--compact .calendar-week { flex: 1; min-height: 0; }
+
+  .calendar-day-list {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(100vh - 4rem);
+    padding: 18px;
+    color: #252b36;
+  }
+  .calendar-day-list header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
+  .calendar-day-list h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .calendar-day-list header p { margin: 4px 0 0; font-size: 12px; color: #7d8491; }
+  .calendar-day-list header button { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; }
+  .calendar-day-list-items { min-height: 0; overflow-y: auto; }
+  .calendar-day-list-items button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 6px;
+    border-bottom: 1px solid #edf0f4;
+    text-align: left;
+    cursor: pointer;
+  }
+  .calendar-day-list-items button i { width: 3px; height: 18px; flex-shrink: 0; }
+  .calendar-day-list-items button span { flex: 1; min-width: 0; overflow-wrap: anywhere; font-family: var(--app-font, "Segoe UI", "Malgun Gothic", sans-serif); }
+  .calendar-day-list-items button svg { flex-shrink: 0; color: #9097a4; }
+  .calendar-day-list button:hover { background: #f5f7fa; }
+  .calendar-day-list button:focus-visible { outline: 2px solid #8798b2; outline-offset: -2px; }
+  .calendar-day-list-empty { padding: 16px 0; color: #7d8491; font-size: 13px; }
+
+  @media (max-width: 600px) {
+    .calendar-grid-frame { margin: 0; border-radius: 0; }
+    .day-cell { padding: 4px 3px; }
+    .calendar-day-number { width: 22px; height: 22px; font-size: 12px; }
+    .event-bar-inner { inset-inline: 0 3px; padding-inline: 0; }
+  }
+
+  @media (height < 950px) {
+    .calendar-event-grid { grid-auto-rows: 19px; row-gap: 3.5px; }
+  }
+
+  @media (height < 900px) {
+    .calendar-event-grid { grid-auto-rows: 18px; row-gap: 3px; }
+    .event-bar-inner { font-size: 11.75px; }
+  }
+
+  @media (height < 800px) {
+    .calendar-event-grid { grid-auto-rows: 17px; row-gap: 2.5px; }
+    .event-bar-inner { font-size: 11.5px; }
+  }
+
+  @media (height < 650px) {
+    .calendar-day-number { width: 20px; height: 20px; font-size: 11px; }
+    .day-cell { padding-top: 3px; }
+    .calendar-event-grid { padding-top: 26px; grid-auto-rows: 16px; row-gap: 2px; }
+    .event-bar-inner { border-radius: 0 5px 5px 0; font-size: 11px; }
+  }
+
+  @media (height < 580px) {
+    .calendar-event-grid { grid-auto-rows: 15px; row-gap: 2px; }
+    .event-bar-inner { font-size: 10.75px; }
+  }
+
+  @media (height < 500px), (max-width: 480px) {
+    .day-cell { padding-top: 3px; }
+    .calendar-day-number { width: 20px; height: 20px; font-size: 11px; }
+    .calendar-weekday-header { height: 27px; font-size: 11px; }
+    .calendar-event-grid { padding-top: 24px; grid-auto-rows: 6px; row-gap: 2px; }
+    .event-bar-inner {
+      top: 1px;
+      bottom: 1px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background-image: none;
+    }
+    .event-bar-inner span { display: none; }
+    .event-bar-inner--filled .event-color-marker { display: none; }
+    .event-bar-inner--single {
+      display: flex;
+      align-items: center;
+      border-radius: 0;
+    }
+    .event-bar-inner--single .event-color-marker {
+      display: block;
+      width: 3px;
+      height: 100%;
+      min-height: 0;
+      flex-shrink: 0;
+      border-radius: 0;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .calendar-toolbar { flex-wrap: wrap; }
+    .calendar-view-buttons { display: none; }
+    .calendar-search { order: 1; flex: 1 0 100%; margin-left: 0; }
+  }
+
+  /* 최소 높이에서도 날짜와 컬러 막대 두 줄이 들어가도록 간격을 줄입니다. */
+  @media (max-height: 400px) {
+    .calendar-header { padding: 6px 12px; }
+    .calendar-toolbar { min-height: 28px; }
+    .calendar-toolbar-button { width: 26px; height: 26px; }
+    .calendar-search,
+    .calendar-create-button { height: 28px; }
+    .calendar-search-status { margin-top: 4px; line-height: 12px; }
+    .calendar-grid-frame { margin-bottom: 6px; }
+    .calendar-weekday-header { height: 22px; }
+    .day-cell { padding-top: 2px; }
+    .calendar-day-number { width: 18px; height: 18px; font-size: 10px; }
+    .calendar-event-grid { padding-top: 20px; padding-bottom: 2px; grid-auto-rows: 5px; row-gap: 2px; }
+    .calendar-day-summary {
+      top: 3px;
+      right: 3px;
+      bottom: auto;
+      left: auto;
+      font-size: 9px;
+      line-height: 12px;
     }
   }
 
@@ -174,7 +469,7 @@ div#root {
 /* 4. 유틸리티 (드래그 및 폰트 크기) */
 @layer utilities {
   input::placeholder {
-    font-family: "GangwonEducationSaeum";
+    font-family: inherit;
   }
 
   .drag {
@@ -186,28 +481,49 @@ div#root {
   }
 
   .font-SiganpyoR {
-    font-family: 'SiganpyoR', sans-serif;
+    font-family: var(--app-font, 'SiganpyoR', sans-serif);
     font-size: clamp(12px, 1.6vw, 15px);
     line-height: normal;
     letter-spacing: -0.6px;
   }
 
   .font-JayusiganR {
-    font-family: 'JayusiganR', sans-serif;
+    font-family: var(--app-font, 'JayusiganR', sans-serif);
     font-size: clamp(13px, 1.6vw, 15px);
     line-height: normal;
     letter-spacing: -0.6px;
   }
 
   .font-jalnan {
-    font-family: 'Jalnan', sans-serif;
+    font-family: var(--app-font, 'Jalnan', sans-serif);
   }
 
   .font-gangwon {
-    font-family: 'GangwonEducationSaeum', sans-serif;
+    font-family: var(--app-font, 'GangwonEducationSaeum', sans-serif);
   }
 
   .font-maruBuri {
-    font-family: 'MaruBuri', sans-serif;
+    font-family: var(--app-font, 'MaruBuri', sans-serif);
   }
+}
+
+/* User colors apply to the calendar; settings keep a readable editing surface. */
+@layer components {
+  .calendar-surface:not(.settings-page) { background: transparent; }
+  .calendar-header { background: color-mix(in srgb, var(--color-background) var(--calendar-surface-opacity, 72%), transparent); }
+  .calendar-view, .calendar-weekday-header, .calendar-day-summary { color: var(--color-text); }
+  .calendar-header, .calendar-toolbar-button, .calendar-today-button, .calendar-search, .calendar-search input, .calendar-search input::placeholder, .calendar-search-status, .calendar-view-buttons button:not(.is-active) { color: var(--color-headerText); }
+  .calendar-view-buttons button:disabled { color: color-mix(in srgb, var(--color-headerText) 45%, transparent); }
+  .calendar-weekday-header > div:first-child { color: var(--color-sunday); }
+  .calendar-weekday-header > div:last-child { color: var(--color-saturday); }
+  .calendar-create-button, .calendar-view-buttons button.is-active { background: var(--color-accent); color: var(--color-accentText); border-color: var(--color-accent); }
+  .calendar-create-button:hover { background: color-mix(in srgb, var(--color-accent) 85%, var(--color-text)); }
+  .calendar-toolbar-button, .calendar-today-button, .calendar-search, .calendar-view-buttons { border-color: var(--widget-grid-line); background: color-mix(in srgb, var(--color-background) 42%, transparent); }
+  .calendar-toolbar-button:hover, .calendar-day-summary:hover { background: color-mix(in srgb, var(--color-accent) 12%, transparent); color: var(--color-text); }
+  .calendar-toolbar-button:hover { color: var(--color-headerText); }
+  .calendar-weekday-header { background: color-mix(in srgb, var(--color-weekdayHeaderBackground) var(--calendar-surface-opacity, 72%), transparent); }
+
+  .calendar-header :focus-visible { outline-color: var(--color-accent); }
+  .event-bar-inner.selected { outline-color: var(--color-accent); }
+  .event-bar-inner { color: var(--color-eventText); }
 }

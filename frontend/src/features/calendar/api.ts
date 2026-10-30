@@ -1,55 +1,40 @@
-import axios from "axios";
-import { CalendarEvent } from "./calendar.types";
-
-const api = axios.create({
-  baseURL: "http://localhost:4000/api",
-});
-
+import { invoke } from "@tauri-apps/api/core";
+import { addDays, startOfDay } from "date-fns";
+import type { CalendarEvent } from "./calendar.types";
+// DB에서 가져온 날짜는 Date 객체가 아니라 문자열입니다.
+interface SavedEvent {
+  id: number;
+  title: string;
+  memo: string | null;
+  start: string;
+  end: string;
+  color: string;
+  hasBackground: boolean;
+}
 
 // 일정 목록 조회
 // 수정 전 : events 전체를 받아 클라이언트가 걸러냄
 // 수정 후 : 화면에 보이는 날짜 범위와 "겹치는 이벤트만" 반환받음
-// 월 단위 간단 캐시에 저장해서 확인 후 없으면 요청
-// 월 변경
-//    ↓
-// calendarDays 계산
-//    ↓
-// gridStart / gridEnd 계산
-//    ↓
-// monthCache에 있는지 확인
-//    ↓
-// 있으면 → setEvents
-// 없으면 → fetchEvents(start, end)
-//             ↓
-//          캐시에 저장
-// 문제 : 이벤트 수 적고 , 사용자 적고, 로컬이라서 전부 메모리에 쌓여도 ㄱㅊ 
-//그런데 확장성 관점에서는 메모리 증가 문제 발생할 수 있음 
+// 월 변경 → calendarDays 계산 → gridStart / gridEnd 계산 → fetchEvents(start, end)
+// 기존 월별 캐시는 제거하고 현재 화면의 일정만 메모리에 보관합니다.
 export async function fetchEvents(
   start: Date,
   end: Date
 ): Promise<CalendarEvent[]> {
+  const rangeStart = startOfDay(start);
+  // 마지막 날 오후 일정도 포함하도록 다음 날 0시까지 조회합니다.
+  const rangeEnd = addDays(startOfDay(end), 1);
 
-  const startTime = performance.now();
-
-  const res = await api.get<CalendarEvent[]>("/events", {
-    params: {
-      start: start.toISOString(),
-      end: end.toISOString(),
-    },
+  const events = await invoke<SavedEvent[]>("fetch_events", {
+    start: rangeStart.toISOString(),
+    end: rangeEnd.toISOString(),
   });
 
-  const endTime = performance.now();
-  const duration = endTime - startTime;
-
-  console.log("\n================ API Performance ===================");
-  console.log(`Events Received : ${res.data.length.toLocaleString()}`);
-  console.log(`API Response    : ${duration.toFixed(2)} ms`);
-  console.log("===================================================\n");
-
-  return res.data.map((ev: any) => ({
-    ...ev,
-    start: new Date(ev.start),
-    end: new Date(ev.end),
+  return events.map(event => ({
+    ...event,
+    memo: event.memo ?? undefined,
+    start: new Date(event.start),
+    end: new Date(event.end),
   }));
 }
 
@@ -57,11 +42,21 @@ export async function fetchEvents(
 export async function createEvent(
   eventData: CalendarEvent
 ): Promise<CalendarEvent> {
-  const res = await api.post<CalendarEvent>(
-    "/events",
-    eventData
-  );
-  return res.data;
+  // invoke는 서버 요청 대신 앱 내부의 Rust 함수를 호출합니다.
+  const savedEvent = await invoke<SavedEvent>("create_event", {
+    event: {
+      ...eventData,
+      start: eventData.start.toISOString(),
+      end: eventData.end.toISOString(),
+    },
+  });
+
+  return {
+    ...savedEvent,
+    memo: savedEvent.memo ?? undefined,
+    start: new Date(savedEvent.start),
+    end: new Date(savedEvent.end),
+  };
 }
 
 // 일정 수정
@@ -69,17 +64,26 @@ export async function updateEvent(
   event: CalendarEvent
 ): Promise<CalendarEvent> {
   if (!event.id) {
-    throw new Error("Event id is required for update");
+    throw new Error("수정할 일정 ID가 없습니다.");
   }
 
-  const res = await api.put<CalendarEvent>(
-    `/events/${event.id}`,
-    event
-  );
-  return res.data;
+  const savedEvent = await invoke<SavedEvent>("update_event", {
+    event: {
+      ...event,
+      start: event.start.toISOString(),
+      end: event.end.toISOString(),
+    },
+  });
+
+  return {
+    ...savedEvent,
+    memo: savedEvent.memo ?? undefined,
+    start: new Date(savedEvent.start),
+    end: new Date(savedEvent.end),
+  };
 }
 
 // 일정 삭제
 export async function deleteEvent(id: number): Promise<void> {
-  await api.delete(`/events/${id}`);
+  await invoke("delete_event", { id });
 }

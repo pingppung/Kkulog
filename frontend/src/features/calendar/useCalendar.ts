@@ -1,288 +1,171 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { startOfDay } from "date-fns";
-import { buildCalendarDays, splitEventByWeek } from "./calendar.utils";
+import { buildCalendarDays } from "./calendar.utils";
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from "./api";
-import { CalendarDay, CalendarEvent, EventBar } from "./calendar.types";
+import { createLatestRequest } from "./latestRequest";
+import type { CalendarEvent } from "./calendar.types";
 
 export function useCalendar() {
-  const renderStartRef = useRef<number | null>(null);
-  /* ===== 오늘 ===== */
-  const [today] = useState(() => startOfDay(new Date()));
-
-  /* ===== 현재 보고 있는 연 / 월 ===== */
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-
-  /* ===== 일정 ===== */
+  // 화면에서 사용하는 상태
+  const [today, setToday] = useState(() => startOfDay(new Date()));
+  const [month, setMonth] = useState(() => {
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  /* ===== 월 캐시 ===== */
-  const monthCache = useRef<Map<string, CalendarEvent[]>>(new Map());
+  const [requests] = useState(createLatestRequest);
+  const [refreshCount, setRefreshCount] = useState(0);
 
-  /* ===== 날짜 그리드 ===== */
+  // 현재 달에 표시할 날짜를 만들고 7일씩 나눕니다.
+  const currentYear = month.getFullYear();
+  const currentMonth = month.getMonth();
 
-  const calendarDays: CalendarDay[] = useMemo(() => {
+  const calendarDays = useMemo(() => {
     return buildCalendarDays(currentYear, currentMonth);
   }, [currentYear, currentMonth]);
 
-  const weeks: CalendarDay[][] = useMemo(() => {
-    const result: CalendarDay[][] = [];
-    for (let i = 0; i < calendarDays.length; i += 7) {
-      result.push(calendarDays.slice(i, i + 7));
+  const weeks = useMemo(() => {
+    const result = [];
+
+    for (let index = 0; index < calendarDays.length; index += 7) {
+      const week = calendarDays.slice(index, index + 7);
+      result.push(week);
     }
+
     return result;
   }, [calendarDays]);
 
-  /* ===== 월 변경 시 range 기반 fetch ===== */
+  const reload = useCallback(() => {
+    requests.invalidate();
+    // 숫자를 바꾸면 아래 일정 조회가 다시 실행됩니다.
+    setRefreshCount(count => count + 1);
+  }, [requests]);
+
+  // 앱을 계속 켜 두어도 오늘 날짜가 바뀌도록 처리합니다.
   useEffect(() => {
-    if (!calendarDays.length) return;
+    let timer: ReturnType<typeof setTimeout>;
 
-    const monthKey = `${currentYear}-${currentMonth}`;
+    function updateToday() {
+      clearTimeout(timer);
 
-    if (monthCache.current.has(monthKey)) {
-      console.log("📦 cache hit:", monthKey);
+      const now = new Date();
+      const newToday = startOfDay(now);
 
-      renderStartRef.current = performance.now();
-      setEvents(monthCache.current.get(monthKey)!);
+      setToday(previousToday => {
+        if (previousToday.getTime() === newToday.getTime()) {
+          return previousToday;
+        }
+        return newToday;
+      });
 
-      return;
+      const nextMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1
+      );
+      const delay = nextMidnight.getTime() - now.getTime() + 50;
+      timer = setTimeout(updateToday, delay);
     }
 
-    const gridStart = calendarDays[0].date;
-    const gridEnd = calendarDays[calendarDays.length - 1].date;
+    updateToday();
+    window.addEventListener("focus", updateToday);
+    document.addEventListener("visibilitychange", updateToday);
 
-    fetchEvents(gridStart, gridEnd).then(data => {
-      const MAX_CACHE = 6;
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("focus", updateToday);
+      document.removeEventListener("visibilitychange", updateToday);
+    };
+  }, []);
 
-      if (monthCache.current.size >= MAX_CACHE) {
-        const oldestKey = monthCache.current.keys().next().value;
-        if (oldestKey !== undefined) {
-          monthCache.current.delete(oldestKey);
-        }
-      }
-
-      monthCache.current.set(monthKey, data);
-
-      // 렌더 시작 기록
-      renderStartRef.current = performance.now();
-
-      setEvents(data);
-    });
-
-  }, [currentYear, currentMonth]);
-
+  // 표시하는 달이 바뀌거나 새로고침하면 일정을 조회합니다.
   useEffect(() => {
-    if (!events.length || renderStartRef.current === null) return;
+    const startDate = calendarDays[0].date;
+    const endDate = calendarDays[calendarDays.length - 1].date;
 
-    requestAnimationFrame(() => {
-      const renderEnd = performance.now();
+    setLoading(true);
+    setError(null);
+    setEvents([]);
+    setSelectedEventId(null);
 
-      console.log("\n================ Render Performance ================");
-      console.log(`Events Rendered : ${events.length.toLocaleString()}`);
-      console.log(
-        `Render Time     : ${(renderEnd - renderStartRef.current!).toFixed(2)} ms`
-      );
-      console.log("===================================================\n");
-
-      renderStartRef.current = null;
+    requests.run(() => fetchEvents(startDate, endDate), {
+      success: data => {
+        setEvents(data);
+      },
+      failure: reason => {
+        setError("일정을 불러오지 못했습니다: " + String(reason));
+      },
+      complete: () => {
+        setLoading(false);
+      },
     });
 
-  }, [events]);
-
-
-  /* ===== 현재 캘린더 범위에 보이는 일정 ===== */
-  const visibleEvents = useMemo(() => {
-    if (!events.length || !calendarDays.length) return [];
-
-    const gridStart = calendarDays[0].date;
-    const gridEnd = calendarDays[calendarDays.length - 1].date;
-
-    return events.filter(ev => {
-      return ev.start <= gridEnd && ev.end >= gridStart;
-    });
-
-  }, [events, calendarDays]);
-
-  /* ===== 주 단위 분할 ===== */
-
-  const segments = useMemo(() => {
-    return visibleEvents.flatMap(ev =>
-      splitEventByWeek(ev, calendarDays)
-    );
-  }, [visibleEvents, calendarDays]);
-
-  /* ===== 이벤트 바 레이아웃 계산 ===== */
-
-  const eventBars: EventBar[] = useMemo(() => {
-    const sortedSegments = [...segments].sort((a, b) => {
-      if (a.weekIndex !== b.weekIndex) {
-        return a.weekIndex - b.weekIndex
-      }
-      return a.colStart - b.colStart
-    })
-
-    const bars: EventBar[] = []
-
-    // week → rows → bars
-    const rowsByWeek: Record<number, EventBar[][]> = {}
-
-    sortedSegments.forEach(seg => {
-
-      if (!rowsByWeek[seg.weekIndex]) {
-        rowsByWeek[seg.weekIndex] = []
-      }
-
-      const rows = rowsByWeek[seg.weekIndex]
-
-      let row = 0
-
-      while (true) {
-
-        if (!rows[row]) {
-          rows[row] = []
-          break
-        }
-
-        const conflict = rows[row].some(b =>
-          !(
-            seg.colStart + seg.span <= b.colStart ||
-            b.colStart + b.span <= seg.colStart
-          )
-        )
-
-        if (!conflict) break
-
-        row++
-      }
-
-
-      const bar: EventBar = {
-        eventId: seg.eventId,
-        title: seg.title,
-        color: seg.color,
-        weekIndex: seg.weekIndex,
-        colStart: seg.colStart,
-        span: seg.span,
-        row,
-      };
-
-      rows[row].push(bar)
-      bars.push(bar)
-
-    });
-
-    return bars;
-  }, [segments]);
-
-  /* ===== 월 이동 ===== */
-
-  const prevMonth = () => {
-    setCurrentMonth(m => {
-      if (m === 0) {
-        setCurrentYear(y => y - 1);
-        return 11;
-      }
-      return m - 1;
-    });
-  };
-
-  const nextMonth = () => {
-    setCurrentMonth(m => {
-      if (m === 11) {
-        setCurrentYear(y => y + 1);
-        return 0;
-      }
-      return m + 1;
-    });
-  };
-
-  /* ===== 일정 CRUD ===== */
-
-  const createEventHandler = async (event: CalendarEvent) => {
-    const createdRaw = await createEvent(event);
-
-    const created = {
-      ...createdRaw,
-      start: new Date(createdRaw.start),
-      end: new Date(createdRaw.end),
+    return () => {
+      requests.invalidate();
     };
+  }, [calendarDays, refreshCount, requests]);
 
-    setEvents(prev => [...prev, created]);
-
-    const monthKey = `${currentYear}-${currentMonth}`;
-
-    if (monthCache.current.has(monthKey)) {
-      const cached = monthCache.current.get(monthKey)!;
-      monthCache.current.set(monthKey, [...cached, created]);
-    }
-
-    console.log("created:", created);
-    console.log("visible check:",
-      created.start <= calendarDays[calendarDays.length - 1].date,
-      created.end >= calendarDays[0].date
-    );
-  };
-
-  const updateEventHandler = async (event: CalendarEvent) => {
-    const updatedRaw = await updateEvent(event);
-
-    const updated = {
-      ...updatedRaw,
-      start: new Date(updatedRaw.start),
-      end: new Date(updatedRaw.end),
-    };
-    setEvents(prev =>
-      prev.map(ev => (ev.id === updated.id ? updated : ev))
-    );
-
-    const monthKey = `${currentYear}-${currentMonth}`;
-
-    if (monthCache.current.has(monthKey)) {
-      const cached = monthCache.current.get(monthKey)!;
-
-      const newCached = cached.map(ev =>
-        ev.id === updated.id ? updated : ev
+  function moveMonth(offset: number) {
+    requests.invalidate();
+    setMonth(previousMonth => {
+      return new Date(
+        previousMonth.getFullYear(),
+        previousMonth.getMonth() + offset,
+        1
       );
+    });
+  }
 
-      monthCache.current.set(monthKey, newCached);
-    }
-  };
+  function prevMonth() {
+    moveMonth(-1);
+  }
 
-  const deleteEventHandler = async (id: number) => {
+  function nextMonth() {
+    moveMonth(1);
+  }
+
+  function goToToday() {
+    const currentDate = startOfDay(new Date());
+    setToday(currentDate);
+    setMonth(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
+    reload();
+  }
+
+  // 저장이 성공하면 현재 화면의 일정을 다시 불러옵니다.
+  async function addNewEvent(event: CalendarEvent) {
+    await createEvent(event);
+    reload();
+  }
+
+  async function updateEventHandler(event: CalendarEvent) {
+    await updateEvent(event);
+    reload();
+  }
+
+  async function deleteEventHandler(id: number) {
     await deleteEvent(id);
+    reload();
+  }
 
-    // 1️⃣ UI 상태 제거
-    setEvents(prev => prev.filter(e => e.id !== id));
-
-    // 2️⃣ cache 제거
-    const monthKey = `${currentYear}-${currentMonth}`;
-
-    if (monthCache.current.has(monthKey)) {
-      const cached = monthCache.current.get(monthKey)!;
-      monthCache.current.set(
-        monthKey,
-        cached.filter(e => e.id !== id)
-      );
-    }
-  };
   return {
     today,
-
     currentYear,
     currentMonth,
+    calendarDays,
     weeks,
-
     events,
-    eventBars,
-
     selectedEventId,
     setSelectedEventId,
-
+    loading,
+    error,
+    reload,
     prevMonth,
     nextMonth,
-
-    addNewEvent: createEventHandler,
+    goToToday,
+    addNewEvent,
     updateEvent: updateEventHandler,
     deleteEvent: deleteEventHandler,
   };

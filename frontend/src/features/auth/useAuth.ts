@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { getMeApi, loginApi, signupApi, checkUsernameApi, logoutApi } from "./api";
 import { useAuthStore } from "../../store/auth"
-import { AuthForm } from "./auth.types";
+import type { AuthForm } from "./auth.types";
 
 
 export const login = async (form: AuthForm) => {

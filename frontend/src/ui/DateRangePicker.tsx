@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { ko } from "date-fns/locale"
 import "react-day-picker/dist/style.css";
@@ -21,7 +20,6 @@ export default function DateRangePicker({
   startDate,
   endDate,
 }: DateRangePickerProps) {
-  const [selected, setSelected] = useState<Date>();
 
   return (
     <div className="relative bg-white rounded-lg shadow-lg p-3 ">

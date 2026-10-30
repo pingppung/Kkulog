@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useCalendar } from "../../features/calendar/useCalendar";
 import CalendarView from "../../features/calendar/CalendarView";
 import Modal from "../../ui/Modal";
 import EventForm from "../../features/calendar/EventForm";
-import { invoke } from "@tauri-apps/api/core";
-import { CalendarEvent } from "../../features/calendar/calendar.types";
+import type { CalendarEvent } from "../../features/calendar/calendar.types";
 
 
 //이벤트 흐름 제어
@@ -12,18 +11,7 @@ export default function CalendarPage() {
 
   const calendar = useCalendar();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isWindowLocked, setIsWindowLocked] = useState(true);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-
-  const toggleWindowLock = async () => {
-    const next = !isWindowLocked;
-    setIsWindowLocked(next);
-    try {
-      await invoke("set_edit_mode", { isEdit: next });
-    } catch (err) {
-      console.warn("창 모드 변경 실패:", err);
-    }
-  };
 
   const handleCreate = () => {
     setEditingEvent(null);
@@ -40,16 +28,12 @@ export default function CalendarPage() {
 
   const handleDelete = async (eventId: number) => {
     await calendar.deleteEvent(eventId);
-    setIsModalOpen(false);
   };
   const closeModal = () => {
     setIsModalOpen(false);
+    setEditingEvent(null);
   }
 
-  const windowControls = {
-    isLocked: isWindowLocked,
-    toggleLock: toggleWindowLock,
-  };
   const eventEditor = {
     create: handleCreate,
     edit: handleEdit,
@@ -60,41 +44,31 @@ export default function CalendarPage() {
     : calendar.addNewEvent;
 
 
-  useEffect(() => {
-    invoke("set_edit_mode", { isEdit: isWindowLocked });
-  }, []);
-
   return (
     <div
-      className="relative w-full h-full flex flex-col pt-20 bg-transparent transition-all duration-300"
+      className="relative w-full h-full flex flex-col bg-transparent"
     >
-      {/* 상단 캐릭터 */}
-      <div className="absolute -top-4.5 left-8 z-[100] pointer-events-none select-none">
-        <img
-          src="/c4.png"
-          alt="figure"
-          className="h-32 max-w-[50vw] w-auto drop-shadow-[0_5px_5px_rgba(0,0,0,0.2)]"
-        />
-      </div>
-      
       <div
-        data-tauri-drag-region={!isWindowLocked ? "true" : undefined}
-        className={`w-full h-full bg-transparent font-SiganpyoR transition-all duration-300 }`} >
+        className="w-full h-full bg-transparent" >
 
         <div className="window-shadow rounded-xl w-full h-full">
-          <div className="window-frame flex flex-col rounded-xl text-zinc-100 overflow-hidden w-full h-full">
+          <div className="calendar-surface window-frame flex flex-col text-zinc-900 overflow-hidden w-full h-full">
 
             {/* Calendar 그리드 */}
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              {calendar.error && <div role="alert" className="p-2 text-sm bg-red-950 text-white">
+                {calendar.error}
+                {calendar.error && <button className="ml-2 underline" onClick={calendar.reload}>다시 시도</button>}
+              </div>}
+              {calendar.loading && <div role="status" className="px-2 text-xs">일정 불러오는 중…</div>}
               <CalendarView
                 calendar={calendar}
-                windowControls={windowControls}
                 eventEditor={eventEditor}
               />
             </div>
 
             {/* 일정에디터 모달 */}
-            <Modal isOpen={isModalOpen} onClose={closeModal}>
+            {isModalOpen && <Modal>
               <EventForm
                 event={editingEvent ?? undefined}
                 baseDate={calendar.today}
@@ -102,7 +76,7 @@ export default function CalendarPage() {
                 onSubmit={handleSubmit}
                 onClose={closeModal}
               />
-            </Modal>
+            </Modal>}
           </div>
         </div>
       </div>

@@ -1,123 +1,65 @@
-# 🛠 Setup Guide
+﻿# 실행 메모
 
-이 문서는 **Kkulog** 프로젝트의 초기 환경 구축 및 실행 방법을 기록합니다.
+Windows에서 개발 중이다. 다른 PC에서 다시 설치할 때 참고하려고 적어뒀다.
 
----
+## 설치할 것
 
-## 1. 개발 환경 정보
-| 항목 | 버전 / 상태 |
-| :--- | :--- |
-| **Node.js** | 22.16.0 |
-| **npm** | 10.9.2 |
-| **React** | 19.2.0 |
-| **Vite** | 7.2.2 |
-| **TailwindCSS** | 4.1.17 |
-| **Rust** | MSVC 툴체인 설치 필수 |
+- Node.js, npm
+- Rust (Windows MSVC)
+- Microsoft C++ Build Tools → C++ 데스크톱 개발 항목
+- Microsoft Edge WebView2 Runtime
 
----
+설치가 됐는지 터미널에서 확인한다.
 
-## 2. 필수 환경 확인
-개발 시작 전 아래 명령어로 환경이 갖춰졌는지 확인합니다.
-```bash
-rustc --version
-cargo --version
+```powershell
 node -v
 npm -v
+rustc --version
+cargo --version
 ```
 
----
+## 실행
 
-## 3. 프로젝트 초기화 (Frontend)
+프로젝트 폴더에서 아래 명령어를 실행한다.
 
-### 1) Vite 기반 React 생성
-```bash
-mkdir frontend
+```powershell
 cd frontend
-
-npm create vite@latest . -- --template react
 npm install
+npm run tauri -- dev
 ```
 
-### 2) TailwindCSS 설정
-```bash
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
+필요한 라이브러리는 `npm install`로 받는다. 버전은 `package.json`과 `package-lock.json`에 적혀 있다. 처음에는 인터넷이 필요하고 Rust 빌드 때문에 시간이 좀 걸릴 수 있다.
+
+개발 서버도 같이 켜지기 때문에 따로 실행할 필요는 없다. 이미 만들어진 프로젝트라 Vite나 Tauri 초기 설정도 다시 하지 않아도 된다.
+
+화면만 브라우저에서 볼 때는 `frontend`에서 `npm run dev`를 쓴다. 일정 저장과 조회는 Tauri 앱에서 해야 한다.
+
+설치 파일을 만들 때도 `frontend`에서 실행한다.
+
+```powershell
+npm run tauri -- build
 ```
 
-**tailwind.config.js**
-```js
-export default {
-  content: ["./index.html", "./src/**/*.{js,jsx}"],
-  theme: { extend: {} },
-  plugins: [],
-};
-```
+실행 파일은 `src-tauri/target/release`, 설치 파일은 그 아래 `bundle` 폴더에 생긴다.
 
-**src/index.css**
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
+## 참고할 것
 
----
+지금은 SQLite에 저장해서 백엔드나 PostgreSQL을 켜지 않아도 된다. SQLite도 따로 설치하지 않는다. 로그인 코드는 나중에 쓰려고 남겨뒀지만 현재는 꺼둔 상태다.
 
-## 4. Tauri 설정 및 연결
-
-### 1) Tauri CLI 설치 및 초기화
-기존 프론트엔드 프로젝트가 있는 상태에서 실행합니다.
-```bash
-npm install -D @tauri-apps/cli
-npx tauri init
-```
-
-### 2) tauri.conf.json 수정
-Vite 개발 서버와 연동하기 위해 `src-tauri/tauri.conf.json` 파일을 아래와 같이 수정합니다.
-
-```json
-{
-  "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:5173",
-    "distDir": "../dist"
-  },
-  "tauri": {
-    "window": [
-      {
-        "title": "Kkulog",
-        "width": 800,
-        "height": 600,
-        "resizable": true
-      }
-    ]
-  }
-}
-```
-
----
-
-## 5. 실행 및 빌드
-
-### 개발 모드 실행
-```bash
-npm run tauri dev
-```
-
-### 빌드 (exe 파일 생성)
-```bash
-npm run tauri build
-```
-
----
-
-## 🏗 시스템 구조
-앱은 아래와 같은 흐름으로 동작합니다.
+일정은 앱을 껐다 켜도 아래 파일에 남는다.
 
 ```text
-React (JS) 
-   ↓ (WebView)
-Tauri (Rust) 
-   ↓ (Windows API)
-시스템 제어 (C / C++)
+%APPDATA%\com.tauri.dev\kkulog.sqlite3
 ```
+
+파일을 따로 보관하려면 앱을 종료하고 복사한다. 앱 안에서 백업·복원하는 기능은 아직 없다. `tauri.conf.json`의 앱 식별자를 바꾸면 저장 폴더도 달라진다.
+
+창 크기나 개발 서버 주소는 `frontend/src-tauri/tauri.conf.json`에서 바꾼다. 개발 주소는 `devUrl`, 빌드한 화면 경로는 `frontendDist`다.
+
+스타일은 `frontend/src/index.css`, Tailwind 설정은 `frontend/postcss.config.js`를 보면 된다. Tailwind 4를 사용 중이라 CSS에서 `@import "tailwindcss";`로 불러온다. 예전의 `tailwindcss init -p`나 `@tailwind base` 설정을 다시 넣을 필요는 없다.
+
+화면 코드는 `frontend/src`, Rust 코드는 `frontend/src-tauri/src`에 있다. 일정은 `calendar/api.ts`에서 Rust의 `database.rs`를 호출해서 SQLite에 저장한다.
+
+React나 CSS 수정은 대부분 바로 반영된다. Rust나 창 설정을 바꿨는데 반영이 안 되면 실행을 종료하고 다시 켠다.
+
+창은 다른 프로그램 아래에 있고 작업표시줄에도 안 보이게 해뒀다. 실행했는데 안 보이면 바탕화면 쪽을 확인한다.

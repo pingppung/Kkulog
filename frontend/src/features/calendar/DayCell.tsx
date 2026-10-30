@@ -2,9 +2,11 @@ interface DayCellProps {
   date: Date;
   type: 'current' | 'prev' | 'next';
   weekday: number;
+  onOpen?: () => void;
+  hiddenCount?: number;
 }
 
-const DayCell = ({ date, type, weekday }: DayCellProps) => {
+const DayCell = ({ date, type, weekday, onOpen, hiddenCount = 0 }: DayCellProps) => {
   const day = date.getDate();
   const isCurrent = type === "current";
 
@@ -33,10 +35,17 @@ const DayCell = ({ date, type, weekday }: DayCellProps) => {
     .join(" ");
 
   return (
-    <div className={className}>
-      <div className="font-hakgyo">
-        {day}
-      </div>
+    <div className={`${className} ${onOpen ? "cursor-pointer" : ""}`} onClick={onOpen}>
+      {onOpen ? (
+        <button type="button" className="calendar-day-number" onClick={(event) => { event.stopPropagation(); onOpen(); }}
+          aria-label={`${date.toLocaleDateString("ko-KR")} 일정 보기`}>{day}</button>
+      ) : <div className="calendar-day-number">{day}</div>}
+      {onOpen && hiddenCount > 0 && (
+        <button type="button" className="calendar-day-summary" onClick={(event) => { event.stopPropagation(); onOpen(); }}
+          aria-label={`숨겨진 일정 ${hiddenCount}개. 전체 일정 보기`}>
+          <span>+{hiddenCount}</span>
+        </button>
+      )}
       <div className="flex-1 w-full h-full min-h-0" />
     </div>
   );

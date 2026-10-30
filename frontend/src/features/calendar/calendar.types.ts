@@ -12,12 +12,15 @@ export interface CalendarEvent {
   end: Date;
   color: string;
   memo?: string;
+  hasBackground?: boolean;
 }
 
 export interface EventSegment {
   eventId: number;
   title: string;
   color: string;
+  isMultiDay: boolean;
+  hasBackground: boolean;
   weekIndex: number;
   colStart: number;
   span: number;
@@ -27,10 +30,3 @@ export interface EventBar extends EventSegment {
   row: number;
 }
 
-export interface EventFormProps {
-  event?: CalendarEvent;
-  baseDate: Date;
-  onDelete: (eventId: number) => Promise<void> | void;
-  onSubmit: (event: CalendarEvent) => Promise<void> | void;
-  onClose: () => void;
-}

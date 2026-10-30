@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthForm, AuthResult } from "./auth.types";
+import type { AuthForm } from "./auth.types";
 import { login } from "./useAuth";
 
 interface LoginProps {

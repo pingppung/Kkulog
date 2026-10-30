@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AuthForm, AuthResult } from "./auth.types";
+
 import { signup, checkUsername } from "./useAuth";
 
 interface SignupProps {

@@ -1,4 +1,4 @@
-import { CalendarDay, EventSegment, CalendarEvent } from "./calendar.types";
+import type { CalendarDay, EventSegment, CalendarEvent, EventBar } from "./calendar.types";
 
 export function buildCalendarDays(
   year: number,
@@ -85,6 +85,8 @@ export function splitEventByWeek(
       eventId: event.id!,
       title: event.title,
       color: event.color,
+      isMultiDay: eventStart.getTime() !== eventEnd.getTime(),
+      hasBackground: event.hasBackground ?? false,
       weekIndex,
       colStart: calendarDays[segmentStartIndex].weekday,
       span: segmentEndIndex - segmentStartIndex + 1,
@@ -92,4 +94,34 @@ export function splitEventByWeek(
     cur = weekEndIndex + 1;
   }
   return segments;
+}
+
+export function buildEventBars(
+  events: CalendarEvent[],
+  calendarDays: CalendarDay[]
+): EventBar[] {
+  const segments = events.flatMap(event => splitEventByWeek(event, calendarDays));
+  segments.sort((a, b) => {
+    if (a.weekIndex !== b.weekIndex) return a.weekIndex - b.weekIndex;
+    return a.colStart - b.colStart;
+  });
+
+  const bars: EventBar[] = [];
+  const rowEndsByWeek: Record<number, number[]> = {};
+
+  for (const segment of segments) {
+    if (!rowEndsByWeek[segment.weekIndex]) {
+      rowEndsByWeek[segment.weekIndex] = [];
+    }
+    const rowEnds = rowEndsByWeek[segment.weekIndex];
+
+    // 앞 일정이 끝난 줄에 배치하고, 빈 줄이 없으면 새 줄을 만듭니다.
+    let row = rowEnds.findIndex(end => end <= segment.colStart);
+    if (row === -1) row = rowEnds.length;
+
+    rowEnds[row] = segment.colStart + segment.span;
+    bars.push({ ...segment, row });
+  }
+
+  return bars;
 }

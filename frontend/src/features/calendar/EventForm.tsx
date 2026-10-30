@@ -1,9 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { EventFormProps } from "./calendar.types";
+import type { CalendarEvent } from "./calendar.types";
 import DateRangePicker from "../../ui/DateRangePicker";
 import { Trash2 } from "lucide-react";
 
 type PickerTarget = "start" | "end" | null;
+
+interface EventFormProps {
+  event?: CalendarEvent;
+  baseDate: Date;
+  onDelete: (eventId: number) => Promise<void> | void;
+  onSubmit: (event: CalendarEvent) => Promise<void> | void;
+  onClose: () => void;
+}
 
 export default function EventForm({
   event,
@@ -19,13 +27,17 @@ export default function EventForm({
   const pickerRef = useRef<HTMLDivElement>(null);
 
   /* ===================== state ===================== */
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(event?.title ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   const isValid = title.trim().length > 0;
 
-  const [memo, setMemo] = useState("");
-  const [color, setColor] = useState("#4F46E5");
+  const [memo, setMemo] = useState(event?.memo ?? "");
+  const [color, setColor] = useState(event?.color ?? "#4F46E5");
+  const [hasBackground, setHasBackground] = useState(event?.hasBackground ?? false);
 
-  const [isRange, setIsRange] = useState(false); //기간 일정인지 , 당일 일정인지 
+  const [isRange, setIsRange] = useState(!!event && event.start.toDateString() !== event.end.toDateString()); //기간 일정인지 , 당일 일정인지 
   const [startDate, setStartDate] = useState(
     event ? event.start : baseDate
   );
@@ -35,6 +47,7 @@ export default function EventForm({
   );
 
   const [pickerTarget, setPickerTarget] = useState<PickerTarget>(null);
+  const isMultiDay = isRange && startDate.toDateString() !== endDate.toDateString();
 
   /* ===================== utils ===================== */
   const formatKoreanDate = (date: Date) => {
@@ -44,16 +57,11 @@ export default function EventForm({
     return `${month}월 ${day}일 (${weekday})`;
   };
 
-  const formatKoreanTime = (date: Date) =>
-    date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-
   /* ===================== handlers ===================== */
   const handleSave = async () => {
-    let finalEndDate = endDate;
+    if (busyRef.current || !isValid) return;
+    let finalEndDate = new Date(endDate);
+    finalEndDate.setHours(23, 59, 59, 999);
 
     if (!isRange) {
       finalEndDate = new Date(startDate);
@@ -65,12 +73,15 @@ export default function EventForm({
       title,
       memo: memo,
       color,
+      hasBackground,
       start: startDate,
       end: finalEndDate,
     };
-    console.log(newEvent);
-    await onSubmit(newEvent);
-    onClose();
+    busyRef.current = true;
+    setBusy(true); setError(null);
+    try { await onSubmit(newEvent); onClose(); }
+    catch (reason) { setError("저장하지 못했습니다: " + String(reason)); }
+    finally { busyRef.current = false; setBusy(false); }
   };
 
 
@@ -118,12 +129,15 @@ export default function EventForm({
   };
 
   const handleDelete = async () => {
-    if (!event) return;
+    if (!event || busyRef.current) return;
 
     const ok = window.confirm("이 일정을 삭제하시겠습니까?");
     if (!ok) return;
-    await onDelete(event.id!); 
-    onClose();
+    busyRef.current = true;
+    setBusy(true); setError(null);
+    try { await onDelete(event.id!); onClose(); }
+    catch (reason) { setError("삭제하지 못했습니다: " + String(reason)); }
+    finally { busyRef.current = false; setBusy(false); }
   };
   /* ===================== effects ===================== */
   useEffect(() => {
@@ -139,24 +153,10 @@ export default function EventForm({
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (event) {
-      setTitle(event.title);
-      setMemo(event.memo ?? "");
-      setColor(event.color);
-      setStartDate(event.start);
-      setEndDate(event.end);
-
-      const isMultiDay =
-        event.start.toDateString() !== event.end.toDateString();
-
-      setIsRange(isMultiDay);
-    }
-
-  }, [event]);
   return (
     <div className="flex flex-col h-full p-4 text-black min-h-0">
 
+      {error && <div role="alert" className="p-2 text-sm text-red-700">{error}</div>}
       {/* header */}
       <header className="flex justify-between items-center pb-4">
         <h2 className="text-lg font-semibold text-gray-800">
@@ -166,6 +166,7 @@ export default function EventForm({
         <div className="flex items-center gap-3">
           {event && (
             <button
+              disabled={busy}
               onClick={handleDelete}
               className="text-red-400 hover:text-red-600 transition cursor-pointer"
             >
@@ -174,7 +175,7 @@ export default function EventForm({
           )}
 
           <button
-            onClick={onClose}
+            onClick={() => { if (!busyRef.current) onClose(); }}
             className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
           >
             ✕
@@ -183,7 +184,7 @@ export default function EventForm({
       </header>
 
       {/* Scroll Area */}
-      <div className="flex-1 overflow-y-auto space-y-6 pr-1">
+      <fieldset disabled={busy} className="flex-1 min-h-0 overflow-y-auto space-y-6 pr-1">
 
         {/* 제목 */}
         <div>
@@ -273,6 +274,17 @@ export default function EventForm({
             onChange={(e) => setColor(e.target.value)}
           />
         </div>
+        {!isMultiDay && (
+          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={hasBackground}
+              onChange={(e) => setHasBackground(e.target.checked)}
+              className="accent-indigo-500"
+            />
+            배경색 적용 (형광펜 강조)
+          </label>
+        )}
         {/* 메모 */}
         <div>
           <textarea
@@ -287,7 +299,7 @@ export default function EventForm({
         {/* 버튼 */}
         <div className="flex gap-3 pt-2">
           <button
-            onClick={onClose}
+            onClick={() => { if (!busyRef.current) onClose(); }}
             className="flex-1 py-3 rounded-2xl bg-gray-100 
                      text-gray-500 font-medium hover:bg-gray-200 transition"
           >
@@ -296,7 +308,7 @@ export default function EventForm({
 
           <button
             onClick={handleSave}
-            disabled={!isValid}
+            disabled={!isValid || busy}
             className={`flex-1 py-3 rounded-2xl font-semibold transition
                 ${isValid
                 ? "bg-indigo-500 text-white shadow-md hover:bg-indigo-600"
@@ -307,7 +319,7 @@ export default function EventForm({
             {event ? "수정하기" : "저장하기"}
           </button>
         </div>
-      </div >
+      </fieldset>
 
     </div>
 
